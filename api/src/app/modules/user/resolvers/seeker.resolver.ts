@@ -9,7 +9,7 @@ import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../../auth/auth.guard';
 
 @Resolver()
-// @UseGuards(GqlAuthGuard)
+@UseGuards(GqlAuthGuard)
 export class SeekerResolver {
   constructor(private readonly usersService: SeekerService) {}
 

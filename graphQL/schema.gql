@@ -82,7 +82,7 @@ type Recruiter implements User {
   active: Boolean!
   companyAdmin: Boolean!
   companyId: String!
-  company: HiringCompany!
+  hiringCompany: HiringCompany!
   publishedJobs: [Job!]
 }
 

@@ -28,6 +28,9 @@ export class RecruiterService {
   public async findOneById(id: string): Promise<Recruiter> {
     const user = await this.usersRepository.findOne({
         where: { id },
+        relations: {
+          hiringCompany: true,
+        },
     });
 
     if (!user) {

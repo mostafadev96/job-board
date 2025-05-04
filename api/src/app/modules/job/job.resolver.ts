@@ -3,8 +3,11 @@ import { Job } from './entities/job.entity';
 import { JobService } from './job.service';
 import { CreateJobInput } from './types/create-job.input';
 import { UpdateJobInput } from './types/update-job.input';
+import { GqlAuthGuard } from '../auth/auth.guard';
+import { UseGuards } from '@nestjs/common';
 
 @Resolver(() => Job)
+@UseGuards(GqlAuthGuard)
 export class JobResolver {
   constructor(private readonly jobsService: JobService) {}
 

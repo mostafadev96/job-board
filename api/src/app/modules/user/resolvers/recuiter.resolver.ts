@@ -1,4 +1,4 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { UserInputError } from '@nestjs/apollo';
 import { RecruiterService } from '../services/recruiter.service';
 import { Recruiter } from '../entities/recruiter.entity';
@@ -7,9 +7,10 @@ import { CreateRecruiterInput } from '../types/recruiters/create-recruiter.input
 import { UpdateRecruiterInput } from '../types/recruiters/update-recruiter.input';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../../auth/auth.guard';
+import { HiringCompany } from '../../hiring-company/entities/hiring-company.entity';
 
-@Resolver()
-// @UseGuards(GqlAuthGuard)
+@Resolver(() => Recruiter)
+@UseGuards(GqlAuthGuard)
 export class RecruiterResolver {
   constructor(private readonly usersService: RecruiterService) {}
 
@@ -25,6 +26,12 @@ export class RecruiterResolver {
       throw new UserInputError(id);
     }
     return user;
+  }
+
+  @ResolveField()
+  async hiringCompany(@Parent() recruiter: Recruiter): Promise<HiringCompany> {
+    const user = await this.usersService.findOneById(recruiter.id);
+    return user.hiringCompany;
   }
 
   @Mutation(() => Recruiter)

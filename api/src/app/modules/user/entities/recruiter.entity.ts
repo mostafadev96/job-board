@@ -20,8 +20,8 @@ export class Recruiter extends User {
   
   @ManyToOne(() => HiringCompany, (company) => company.recruiters)
   @JoinColumn({ name: 'companyId' })
-  @Field(type => HiringCompany)
-  company: HiringCompany;
+  @Field(type => HiringCompany, )
+  hiringCompany: HiringCompany;
 
   @OneToMany(() => Job, (job) => job.publisher)
   @Field(type => [Job], { nullable: true })

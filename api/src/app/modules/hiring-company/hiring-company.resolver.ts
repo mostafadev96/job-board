@@ -11,7 +11,7 @@ import { Recruiter } from '../user/entities/recruiter.entity';
 import { RecruiterService } from '../user/services/recruiter.service';
 
 @Resolver(() => HiringCompany)
-// @UseGuards(GqlAuthGuard)
+@UseGuards(GqlAuthGuard)
 export class HiringCompanyResolver {
   constructor(
     private readonly service: HiringCompanyService,
