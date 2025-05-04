@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { join } from 'path';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppResolver } from './app.resolver';
+import { UserModule } from './modules/user/user.module';
+import { JobModule } from './modules/job/job.module';
+import { GraphqlOptions } from './graphql/graphql.options';
+import { HiringCompanyModule } from './modules/hiring-company/hiring-company.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 
 @Module({
   imports: [
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'graphQL/schema.gql'),
-      playground: true,
+      useClass: GraphqlOptions,
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -25,8 +25,12 @@ import { AppResolver } from './app.resolver';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    UserModule,
+    HiringCompanyModule,
+    JobModule,
+    AuthModule
   ],
-  controllers: [AppController],
-  providers: [AppService, AppResolver],
+  providers: [
+  ],
 })
 export class AppModule {}

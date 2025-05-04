@@ -2,10 +2,176 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Hello {
-  message: String!
+type Seeker implements User {
+  id: ID!
+  email: String!
+  name: String!
+  active: Boolean!
+  phone: String!
+  experiences: JSON!
+  education: JSON!
+  applications: [Application!]
+}
+
+interface User {
+  id: ID!
+  email: String!
+  name: String!
+  active: Boolean!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type Application {
+  id: ID!
+  seekerId: String!
+  jobId: String!
+  created_at: DateTime!
+  updated_at: DateTime!
+  seeker: Seeker!
+  job: Job!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type HiringCompany {
+  id: ID!
+  title: String!
+  description: String
+  country: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  jobs: [Job!]
+  recruiters: [Recruiter!]
+}
+
+type Job {
+  id: ID!
+  title: String!
+  description: String!
+  country: String!
+  contractType: ContractType!
+  active: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+  publisherId: String!
+  publisher: Recruiter!
+  companyId: String!
+  company: HiringCompany!
+  applications: [Application!]
+}
+
+"""The type of contract for the job"""
+enum ContractType {
+  FULL_TIME
+  PART_TIME
+  FREELANCE
+  INTERNSHIP
+}
+
+type Recruiter implements User {
+  id: ID!
+  email: String!
+  name: String!
+  active: Boolean!
+  companyAdmin: Boolean!
+  companyId: String!
+  company: HiringCompany!
+  publishedJobs: [Job!]
+}
+
+type Admin implements User {
+  id: ID!
+  email: String!
+  name: String!
+  active: Boolean!
 }
 
 type Query {
-  getHello: Hello!
+  recruiters(offset: Int! = 0, limit: Int! = 25): [Recruiter!]!
+  recruiter(id: String!): Recruiter!
+  admins(offset: Int! = 0, limit: Int! = 25): [Admin!]!
+  admin(id: String!): Admin!
+  seekers(offset: Int! = 0, limit: Int! = 25): [Seeker!]!
+  seeker(id: String!): Seeker!
+  hiringCompanies(offset: Int! = 0, limit: Int! = 25): [HiringCompany!]!
+  hiringCompany(id: String!): HiringCompany!
+}
+
+type Mutation {
+  createRecruiter(createRecruiterInput: CreateRecruiterInput!): Recruiter!
+  updateRecruiter(id: String!, updateRecruiterInput: UpdateRecruiterInput!): Recruiter!
+  removeRecruiter(id: String!): Recruiter!
+  createAdmin(createAdminInput: CreateAdminInput!): Admin!
+  updateAdmin(id: String!, updateAdminInput: UpdateAdminInput!): Admin!
+  removeAdmin(id: String!): Admin!
+  createSeeker(createSeekerInput: CreateSeekerInput!): Seeker!
+  updateSeeker(id: String!, updateSeekerInput: UpdateSeekerInput!): Seeker!
+  removeSeeker(id: String!): Seeker!
+  createHiringCompany(createHiringCompanyInput: CreateHiringCompanyInput!): HiringCompany!
+  updateHiringCompany(id: String!, updateHiringCompanyInput: UpdateHiringCompanyInput!): HiringCompany!
+  removeHiringCompany(id: String!): Boolean!
+}
+
+input CreateRecruiterInput {
+  name: String!
+  email: String!
+  password: String!
+  companyAdmin: Boolean! = false
+  active: Boolean! = true
+  companyId: String!
+}
+
+input UpdateRecruiterInput {
+  name: String
+  email: String
+  password: String
+  companyAdmin: Boolean = false
+  active: Boolean = true
+  companyId: String
+  id: String!
+}
+
+input CreateAdminInput {
+  name: String!
+  email: String!
+  password: String!
+}
+
+input UpdateAdminInput {
+  name: String
+  email: String
+  password: String
+  id: String!
+}
+
+input CreateSeekerInput {
+  name: String!
+  email: String!
+  password: String!
+}
+
+input UpdateSeekerInput {
+  name: String
+  email: String
+  password: String
+  id: String!
+}
+
+input CreateHiringCompanyInput {
+  title: String!
+  description: String
+  country: String!
+}
+
+input UpdateHiringCompanyInput {
+  title: String
+  description: String
+  country: String
 }
