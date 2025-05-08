@@ -14,11 +14,13 @@ export class Recruiter extends User {
   @Column({ default: false })
   companyAdmin: boolean;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ nullable: true })
-  companyId: string;
+  companyId?: string;
   
-  @ManyToOne(() => HiringCompany, (company) => company.recruiters)
+  @ManyToOne(() => HiringCompany, (company) => company.recruiters, {
+    eager: true,
+  })
   @JoinColumn({ name: 'companyId' })
   @Field(type => HiringCompany, )
   hiringCompany: HiringCompany;

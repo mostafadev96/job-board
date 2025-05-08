@@ -9,9 +9,13 @@ import { AdminService } from './services/admin.service';
 import { SeekerService } from './services/seeker.service';
 import { SeekerResolver } from './resolvers/seeker.resolver';
 import { AdminResolver } from './resolvers/admin.resolver';
+import { JobModule } from '../job/job.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Admin, Recruiter, Seeker])],
+  imports: [
+    TypeOrmModule.forFeature([Admin, Recruiter, Seeker]),
+    JobModule
+  ],
   providers: [
     RecruiterService,
     AdminService,

@@ -12,21 +12,24 @@ import { UpdateSeekerInput } from '../types/seekers/update-seeker.input';
 export class SeekerService {
   constructor(
     @InjectRepository(Seeker)
-    private readonly usersRepository: Repository<Seeker>,
+    private readonly usersRepository: Repository<Seeker>
   ) {}
 
-  public async findAll(paginationArgs: PaginationArgs): Promise<Seeker[]> 
-  {
+  public async findAll(
+    paginationArgs: PaginationArgs,
+    filters?: FindOptionsWhere<Seeker>
+  ): Promise<Seeker[]> {
     const { limit, offset } = paginationArgs;
     return this.usersRepository.find({
-      skip: offset,
-      take: limit,
+      ...(limit ? { take: limit } : {}),
+      ...(offset ? { skip: offset } : {}),
+      ...(filters ? { where: filters } : {}),
     });
   }
 
   public async findOneById(id: string): Promise<Seeker> {
     const user = await this.usersRepository.findOne({
-        where: { id },
+      where: { id },
     });
 
     if (!user) {
@@ -42,13 +45,13 @@ export class SeekerService {
   public async create(createUserInput: CreateSeekerInput): Promise<Seeker> {
     createUserInput.password = bcrypt.hashSync(createUserInput.password, 8);
 
-    const user = this.usersRepository.create({ ...createUserInput});
+    const user = this.usersRepository.create({ ...createUserInput });
     return this.usersRepository.save(user);
   }
 
   public async update(
     id: string,
-    updateUserInput: UpdateSeekerInput,
+    updateUserInput: UpdateSeekerInput
   ): Promise<Seeker> {
     updateUserInput.password = bcrypt.hashSync(updateUserInput.password, 8);
 

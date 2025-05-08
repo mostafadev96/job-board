@@ -42,7 +42,7 @@ export class HiringCompany {
   @OneToMany(() => Job, (job) => job.company)
   jobs?: Job[];
 
-  @OneToMany(() => Recruiter, (recruiter) => recruiter.hiringCompany)
   @Field(type => [Recruiter], { nullable: true })
+  @OneToMany(() => Recruiter, (recruiter) => recruiter.hiringCompany)
   recruiters?: Recruiter[];
 }

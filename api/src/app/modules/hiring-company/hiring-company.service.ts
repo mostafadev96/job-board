@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { UserInputError } from '@nestjs/apollo';
 import { HiringCompany } from './entities/hiring-company.entity';
 import { PaginationArgs } from '../../graphql/inputs/pagination-args.input';
@@ -14,12 +14,13 @@ export class HiringCompanyService {
     private readonly repository: Repository<HiringCompany>,
   ) {}
 
-  public async findAll(paginationArgs: PaginationArgs): Promise<HiringCompany[]> 
+  public async findAll(paginationArgs: PaginationArgs, filters?: FindOptionsWhere<HiringCompany>): Promise<HiringCompany[]> 
   {
     const { limit, offset } = paginationArgs;
     return this.repository.find({
-      skip: offset,
-      take: limit,
+      ...(limit ? { take: limit } : {}),
+      ...(offset ? { skip: offset } : {}),
+      ...(filters ? { where: filters } : {}),
     });
   }
 
@@ -34,19 +35,19 @@ export class HiringCompanyService {
     return entity;
   }
 
-  public async create(createUserInput: CreateHiringCompanyInput): Promise<HiringCompany> {
-    const entity = this.repository.create({ ...createUserInput});
+  public async create(createHiringCompanyInput: CreateHiringCompanyInput): Promise<HiringCompany> {
+    const entity = this.repository.create({ ...createHiringCompanyInput});
     return this.repository.save(entity);
   }
 
   public async update(
     id: string,
-    updateUserInput: UpdateHiringCompanyInput,
+    updateHiringCompanyInput: UpdateHiringCompanyInput,
   ): Promise<HiringCompany> {
 
     const user = await this.repository.preload({
       id,
-      ...updateUserInput,
+      ...updateHiringCompanyInput,
     });
 
     if (!user) {

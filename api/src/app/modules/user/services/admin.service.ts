@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { UserInputError } from '@nestjs/apollo';
 import { PaginationArgs } from '../../../graphql/inputs/pagination-args.input';
@@ -12,21 +11,24 @@ import { UpdateAdminInput } from '../types/admins/update-admin.input';
 export class AdminService {
   constructor(
     @InjectRepository(Admin)
-    private readonly usersRepository: Repository<Admin>,
+    private readonly usersRepository: Repository<Admin>
   ) {}
 
-  public async findAll(paginationArgs: PaginationArgs): Promise<Admin[]> 
-  {
+  public async findAll(
+    paginationArgs: PaginationArgs,
+    filters?: FindOptionsWhere<Admin>
+  ): Promise<Admin[]> {
     const { limit, offset } = paginationArgs;
     return this.usersRepository.find({
-      skip: offset,
-      take: limit,
+      ...(limit ? { take: limit } : {}),
+      ...(offset ? { skip: offset } : {}),
+      ...(filters ? { where: filters } : {}),
     });
   }
 
   public async findOneById(id: string): Promise<Admin> {
     const user = await this.usersRepository.findOne({
-        where: { id },
+      where: { id },
     });
 
     if (!user) {
@@ -40,17 +42,14 @@ export class AdminService {
   }
 
   public async create(createUserInput: CreateAdminInput): Promise<Admin> {
-
-    const user = this.usersRepository.create({ ...createUserInput});
+    const user = this.usersRepository.create({ ...createUserInput });
     return this.usersRepository.save(user);
   }
 
   public async update(
     id: string,
-    updateUserInput: UpdateAdminInput,
+    updateUserInput: UpdateAdminInput
   ): Promise<Admin> {
-    updateUserInput.password = bcrypt.hashSync(updateUserInput.password, 8);
-
     const user = await this.usersRepository.preload({
       id,
       ...updateUserInput,

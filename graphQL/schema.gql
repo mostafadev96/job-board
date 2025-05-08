@@ -8,8 +8,8 @@ type Seeker implements User {
   name: String!
   active: Boolean!
   phone: String!
-  experiences: JSON!
-  education: JSON!
+  experiences: JSON
+  education: JSON
   applications: [Application!]
 }
 
@@ -25,20 +25,63 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://
 """
 scalar JSON
 
-type Application {
+type ApplicationStatus {
   id: ID!
-  seekerId: String!
-  jobId: String!
+  applicationId: String!
+  recruiterId: String!
+  recruiterName: String
+  recruiterResponse: String
+  status: ApplicationStatusTypes!
   created_at: DateTime!
   updated_at: DateTime!
-  seeker: Seeker!
-  job: Job!
+  application: Application!
+  recruiter: Recruiter!
+}
+
+"""The current status of the application"""
+enum ApplicationStatusTypes {
+  APPLIED
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+  WITHDRAWN
+  ACCEPTED
+  DECLINED
 }
 
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+type Application {
+  id: ID!
+  seekerId: String!
+  seekerName: String
+  seekerPhone: String
+  seekerEmail: String
+  seekerShortDescription: String
+  experiences: JSON
+  education: JSON
+  jobId: String!
+  jobTitle: String
+  jobContractType: ContractType
+  status: ApplicationStatusTypes!
+  created_at: DateTime!
+  updated_at: DateTime!
+  seeker: Seeker!
+  job: Job!
+  applicationStatuses: [ApplicationStatus!]
+}
+
+"""The type of contract for the job"""
+enum ContractType {
+  FULL_TIME
+  PART_TIME
+  FREELANCE
+  INTERNSHIP
+}
 
 type HiringCompany {
   id: ID!
@@ -58,21 +101,13 @@ type Job {
   country: String!
   contractType: ContractType!
   active: Boolean!
+  publisherId: String!
+  companyId: String!
   created_at: DateTime!
   updated_at: DateTime!
-  publisherId: String!
   publisher: Recruiter!
-  companyId: String!
   company: HiringCompany!
   applications: [Application!]
-}
-
-"""The type of contract for the job"""
-enum ContractType {
-  FULL_TIME
-  PART_TIME
-  FREELANCE
-  INTERNSHIP
 }
 
 type Recruiter implements User {
@@ -81,7 +116,7 @@ type Recruiter implements User {
   name: String!
   active: Boolean!
   companyAdmin: Boolean!
-  companyId: String!
+  companyId: String
   hiringCompany: HiringCompany!
   publishedJobs: [Job!]
 }
@@ -100,6 +135,12 @@ type Query {
   admin(id: String!): Admin!
   seekers(offset: Int! = 0, limit: Int! = 25): [Seeker!]!
   seeker(id: String!): Seeker!
+  jobs(offset: Int! = 0, limit: Int! = 25): [Job!]!
+  job(id: String!): Job!
+  applications(offset: Int! = 0, limit: Int! = 25): [Application!]!
+  application(id: String!): Application!
+  applicationStatuses(offset: Int! = 0, limit: Int! = 25): [ApplicationStatus!]!
+  applicationStatus(id: String!): ApplicationStatus!
   hiringCompanies(offset: Int! = 0, limit: Int! = 25): [HiringCompany!]!
   hiringCompany(id: String!): HiringCompany!
 }
@@ -114,6 +155,15 @@ type Mutation {
   createSeeker(createSeekerInput: CreateSeekerInput!): Seeker!
   updateSeeker(id: String!, updateSeekerInput: UpdateSeekerInput!): Seeker!
   removeSeeker(id: String!): Seeker!
+  createJob(createJobService: CreateJobInput!): Job!
+  updateJob(id: String!, updateJobInput: UpdateJobInput!): Job!
+  removeJob(id: String!): Job!
+  createApplication(createApplicationInput: CreateApplicationInput!): Application!
+  updateApplication(id: String!, updateApplicationInput: UpdateApplicationInput!): Application!
+  removeApplication(id: String!): Application!
+  createApplicationStatus(createApplicationStatusInput: CreateApplicationStatusInput!): ApplicationStatus!
+  updateApplicationStatus(id: String!, updateApplicationStatusInput: UpdateApplicationStatusInput!): ApplicationStatus!
+  removeApplicationStatus(id: String!): ApplicationStatus!
   createHiringCompany(createHiringCompanyInput: CreateHiringCompanyInput!): HiringCompany!
   updateHiringCompany(id: String!, updateHiringCompanyInput: UpdateHiringCompanyInput!): HiringCompany!
   removeHiringCompany(id: String!): Boolean!
@@ -155,12 +205,76 @@ input CreateSeekerInput {
   name: String!
   email: String!
   password: String!
+  experiences: JSON
+  education: JSON
 }
 
 input UpdateSeekerInput {
   name: String
   email: String
   password: String
+  experiences: JSON
+  education: JSON
+  id: String!
+}
+
+input CreateJobInput {
+  title: String!
+  description: String!
+  country: String!
+  contractType: ContractType!
+}
+
+input UpdateJobInput {
+  title: String
+  description: String
+  country: String
+  contractType: ContractType
+  id: String!
+  active: Boolean!
+}
+
+input CreateApplicationInput {
+  seekerId: String!
+  jobId: String!
+  seekerName: String
+  seekerPhone: String
+  seekerEmail: String
+  seekerShortDescription: String
+  experiences: JSON
+  education: JSON
+  jobTitle: String
+  jobContractType: ContractType
+}
+
+input UpdateApplicationInput {
+  seekerId: String
+  jobId: String
+  seekerName: String
+  seekerPhone: String
+  seekerEmail: String
+  seekerShortDescription: String
+  experiences: JSON
+  education: JSON
+  jobTitle: String
+  jobContractType: ContractType
+  id: String!
+}
+
+input CreateApplicationStatusInput {
+  applicationId: String!
+  recruiterId: String!
+  recruiterName: String
+  recruiterResponse: String
+  status: ApplicationStatusTypes!
+}
+
+input UpdateApplicationStatusInput {
+  applicationId: String
+  recruiterId: String
+  recruiterName: String
+  recruiterResponse: String
+  status: ApplicationStatusTypes
   id: String!
 }
 

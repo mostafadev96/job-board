@@ -33,6 +33,14 @@ export class Job {
   @Column({ default: true })
   active: boolean;
 
+  @Field()
+  @Column()
+  publisherId: string;
+
+  @Field()
+  @Column()
+  companyId: string;
+
   @Field(() => Date)
   @CreateDateColumn({
     type: 'timestamp',
@@ -48,20 +56,12 @@ export class Job {
   })
   updated_at: Date;
 
-  @Field()
-  @Column()
-  publisherId: string;
-
   @ManyToOne(() => Recruiter, {
     eager: true
   })
   @Field(type => Recruiter)
   @JoinColumn({ name: 'publisherId' })
   publisher: Recruiter;
-
-  @Field()
-  @Column()
-  companyId: string;
 
   @ManyToOne(() => HiringCompany, {
     eager: true

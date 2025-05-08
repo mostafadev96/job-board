@@ -1,5 +1,5 @@
 import { Field, InputType } from "@nestjs/graphql";
-import { ContractType } from "../../../graphql/enums/contract-type";
+import { ContractType } from "../../../../graphql/enums/contract-type";
 
 @InputType()
 export class CreateJobInput {

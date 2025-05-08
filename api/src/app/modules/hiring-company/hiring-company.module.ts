@@ -4,14 +4,15 @@ import { HiringCompany } from './entities/hiring-company.entity';
 import { HiringCompanyResolver } from './hiring-company.resolver';
 import { HiringCompanyService } from './hiring-company.service';
 import { UserModule } from '../user/user.module';
-import { RecruiterService } from '../user/services/recruiter.service';
+import { JobModule } from '../job/job.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       HiringCompany
     ]),
-    UserModule
+    UserModule,
+    JobModule
   ],
   providers: [
     HiringCompanyResolver,
