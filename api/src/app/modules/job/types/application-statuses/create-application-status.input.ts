@@ -6,12 +6,6 @@ export class CreateApplicationStatusInput {
   @Field()
   applicationId: string;
 
-  @Field()
-  recruiterId: string;
-
-  @Field({ nullable: true })
-  recruiterName?: string;
-
   @Field({ nullable: true })
   recruiterResponse?: string;
 

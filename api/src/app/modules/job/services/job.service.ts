@@ -1,68 +1,105 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { Inject, Injectable } from '@nestjs/common';
 import { UserInputError } from '@nestjs/apollo';
 import { PaginationArgs } from '../../../graphql/inputs/pagination-args.input';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
 import { Job } from '../entities/job.entity';
 import { CreateJobInput } from '../types/jobs/create-job.input';
+import { REQUEST } from '@nestjs/core';
 import { UpdateJobInput } from '../types/jobs/update-job.input';
 
 @Injectable()
 export class JobService {
+  private currentUser = null;
   constructor(
-    @InjectRepository(Job)
-    private readonly repo: Repository<Job>
-  ) {}
+    private readonly prismaService: PrismaService,
+    @Inject(REQUEST) private readonly request: Request
+  ) {
+    this.currentUser = (this.request as any).user;
+  }
 
   public async findAll(
     paginationArgs: PaginationArgs,
-    filters?: FindOptionsWhere<Job>
+    filters?: Prisma.jobWhereInput
   ): Promise<Job[]> {
-    const { limit, offset } = paginationArgs;
-    return this.repo.find({
-      ...(limit ? { take: limit } : {}),
-      ...(offset ? { skip: offset } : {}),
+    const res = await  this.prismaService.job.findMany({
+      ...(paginationArgs.limit ? { take: paginationArgs.limit } : {}),
+      ...(paginationArgs.offset ? { skip: paginationArgs.offset } : {}),
       ...(filters ? { where: filters } : {}),
-    });
+      include: {
+        hiring_company: true,
+        recruiter: true,
+      }
+    })
+    return plainToInstance(Job, res);
   }
 
   public async findOneById(id: string): Promise<Job> {
-    const user = await this.repo.findOne({
+    const entity = await this.prismaService.job.findFirst({
       where: { id },
     });
 
-    if (!user) {
+    if (!entity) {
       throw new UserInputError(`Job #${id} not found`);
     }
-    return user;
+    return plainToInstance(Job, entity);
   }
 
-  public async findByProp(data: FindOptionsWhere<Job>) {
-    return this.repo.findOneBy(data);
+  public async findByProp(data: Prisma.jobWhereInput) {
+    const entity = await this.prismaService.job.findFirst({
+      where: data,
+    });
+    if (!entity) {
+      throw new UserInputError(`Application not found`);
+    }
+    return plainToInstance(Job, entity);
   }
 
-  public async create(createJobInput: CreateJobInput): Promise<Job> {
-    const user = this.repo.create({ ...createJobInput });
-    return this.repo.save(user);
+  public async create(
+    createJobInput: CreateJobInput
+  ): Promise<Job> {
+    const recruiter = await this.prismaService.recruiter.findFirst({
+      where: {
+        id: this.currentUser.id,
+      },
+    });
+    const entity = this.prismaService.job.create({
+      data: {
+        ...createJobInput,
+        publisherId: recruiter.id,
+        companyId: recruiter.companyId,
+      },
+    });
+    return plainToInstance(Job, entity);
   }
 
   public async update(
     id: string,
     updateJobInput: UpdateJobInput
   ): Promise<Job> {
-    const user = await this.repo.preload({
-      id,
-      ...updateJobInput,
-    });
-
-    if (!user) {
+    const entity = await this.findOneById(id);
+    if (!entity) {
       throw new UserInputError(`Job #${id} not found`);
     }
-    return this.repo.save(user);
+    await this.prismaService.job.update({
+      where: { id },
+      data: {
+        ...updateJobInput,
+      },
+    });
+    const newEntity = await this.findOneById(id);
+    return plainToInstance(Job, newEntity);
   }
 
   public async remove(id: string) {
-    const user = await this.findOneById(id);
-    return this.repo.remove(user);
+    const entity = await this.findOneById(id);
+    if (!entity) {
+      throw new UserInputError(`Job #${id} not found`);
+    }
+    await this.prismaService.application.delete({
+      where: { id },
+    });
+    return true;
   }
 }

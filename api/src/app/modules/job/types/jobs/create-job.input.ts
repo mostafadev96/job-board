@@ -1,5 +1,6 @@
 import { Field, InputType } from "@nestjs/graphql";
 import { ContractType } from "../../../../graphql/enums/contract-type";
+import { $Enums } from "@prisma/client";
 
 @InputType()
 export class CreateJobInput {
@@ -13,6 +14,6 @@ export class CreateJobInput {
   country: string;
 
   @Field(() => ContractType)
-  contractType: ContractType;
+  contractType: $Enums.job_contracttype_enum;
 
 }

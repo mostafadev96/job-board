@@ -13,7 +13,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
       playground: true,
       context: ({ req }) => ({ req }),
       // resolvers: { JSON: GraphQLJSON },
-      autoSchemaFile: join(process.cwd(), 'graphQL/schema.gql'),
+      autoSchemaFile: join('../../', 'graphQL/schema.gql'),
       // definitions: {
       //   path: join(process.cwd(), 'graphQL/graphql.schema.ts'),
       //   outputAs: 'class',

@@ -62,9 +62,10 @@ export class AuthService {
     if (oldUser) {
       throw new UnauthorizedException('Use another email');
     }
-
+    const salt = bcrypt.genSaltSync();
     const newUser = await this.seekerService.create({
       ...dto,
+      password: bcrypt.hashSync(dto.password, salt),
     });
 
     const payload = {

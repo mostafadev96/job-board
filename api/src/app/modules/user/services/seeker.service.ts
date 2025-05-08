@@ -1,73 +1,104 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
-import { FindOptionsWhere, Repository } from 'typeorm';
 import { UserInputError } from '@nestjs/apollo';
 import { PaginationArgs } from '../../../graphql/inputs/pagination-args.input';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
 import { Seeker } from '../entities/seeker.entity';
 import { CreateSeekerInput } from '../types/seekers/create-seeker.input';
 import { UpdateSeekerInput } from '../types/seekers/update-seeker.input';
+import * as bcrypt from 'bcrypt';
+import { isStringHashed } from '../utils/hashs';
 
 @Injectable()
 export class SeekerService {
   constructor(
-    @InjectRepository(Seeker)
-    private readonly usersRepository: Repository<Seeker>
+    private readonly prismaService: PrismaService,
   ) {}
 
   public async findAll(
     paginationArgs: PaginationArgs,
-    filters?: FindOptionsWhere<Seeker>
+    filters?: Prisma.seekerWhereInput
   ): Promise<Seeker[]> {
-    const { limit, offset } = paginationArgs;
-    return this.usersRepository.find({
-      ...(limit ? { take: limit } : {}),
-      ...(offset ? { skip: offset } : {}),
+    const res = await  this.prismaService.seeker.findMany({
+      ...(paginationArgs.limit ? { take: paginationArgs.limit } : {}),
+      ...(paginationArgs.offset ? { skip: paginationArgs.offset } : {}),
       ...(filters ? { where: filters } : {}),
-    });
+    })
+    return plainToInstance(Seeker, res);
   }
 
   public async findOneById(id: string): Promise<Seeker> {
-    const user = await this.usersRepository.findOne({
+    const entity = await this.prismaService.seeker.findFirst({
       where: { id },
     });
 
-    if (!user) {
-      throw new UserInputError(`User #${id} not found`);
+    if (!entity) {
+      throw new UserInputError(`Seeker #${id} not found`);
     }
-    return user;
+    return plainToInstance(Seeker, entity);
   }
 
-  public async findByProp(data: FindOptionsWhere<Seeker>) {
-    return this.usersRepository.findOneBy(data);
+  public async findByProp(data: Prisma.seekerWhereInput) {
+    const entity = await this.prismaService.seeker.findFirst({
+      where: data,
+    });
+    if (!entity) {
+      throw new UserInputError(`Seeker not found`);
+    }
+    return plainToInstance(Seeker, entity);
   }
 
-  public async create(createUserInput: CreateSeekerInput): Promise<Seeker> {
-    createUserInput.password = bcrypt.hashSync(createUserInput.password, 8);
-
-    const user = this.usersRepository.create({ ...createUserInput });
-    return this.usersRepository.save(user);
+  public async create(
+    createSeekerInput: CreateSeekerInput
+  ): Promise<Seeker> {
+    const entity = this.prismaService.seeker.create({
+      data: {
+        ...createSeekerInput,
+        password: this.hashPasswordIfNotHashed(createSeekerInput.password),
+      },
+    });
+    return plainToInstance(Seeker, entity);
   }
 
   public async update(
     id: string,
-    updateUserInput: UpdateSeekerInput
+    updateSeekerInput: UpdateSeekerInput
   ): Promise<Seeker> {
-    updateUserInput.password = bcrypt.hashSync(updateUserInput.password, 8);
-
-    const user = await this.usersRepository.preload({
-      id,
-      ...updateUserInput,
-    });
-
-    if (!user) {
-      throw new UserInputError(`User #${id} not found`);
+    const entity = await this.findOneById(id);
+    if (!entity) {
+      throw new UserInputError(`Seeker #${id} not found`);
     }
-    return this.usersRepository.save(user);
+    if (updateSeekerInput.password) {
+      updateSeekerInput.password = this.hashPasswordIfNotHashed(updateSeekerInput.password);
+    }
+    await this.prismaService.seeker.update({
+      where: { id },
+      data: {
+        ...updateSeekerInput,
+      },
+    });
+    const newEntity = await this.findOneById(id);
+    return plainToInstance(Seeker, newEntity);
   }
 
   public async remove(id: string) {
-    const user = await this.findOneById(id);
-    return this.usersRepository.remove(user);
+    const entity = await this.findOneById(id);
+    if (!entity) {
+      throw new UserInputError(`Seeker #${id} not found`);
+    }
+    await this.prismaService.seeker.delete({
+      where: { id },
+    });
+    return true;
+  }
+
+  private hashPasswordIfNotHashed(password: string) {
+    let newPassword = password;
+    if(!isStringHashed(password)) {
+      const salt = bcrypt.genSaltSync();
+      newPassword = bcrypt.hashSync(password, salt);
+    }
+    return newPassword;
   }
 }

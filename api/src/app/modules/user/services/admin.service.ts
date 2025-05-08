@@ -1,68 +1,104 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
 import { UserInputError } from '@nestjs/apollo';
 import { PaginationArgs } from '../../../graphql/inputs/pagination-args.input';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
 import { Admin } from '../entities/admin.entity';
 import { CreateAdminInput } from '../types/admins/create-admin.input';
 import { UpdateAdminInput } from '../types/admins/update-admin.input';
+import * as bcrypt from 'bcrypt';
+import { isStringHashed } from '../utils/hashs';
 
 @Injectable()
 export class AdminService {
   constructor(
-    @InjectRepository(Admin)
-    private readonly usersRepository: Repository<Admin>
+    private readonly prismaService: PrismaService,
   ) {}
 
   public async findAll(
     paginationArgs: PaginationArgs,
-    filters?: FindOptionsWhere<Admin>
+    filters?: Prisma.adminWhereInput
   ): Promise<Admin[]> {
-    const { limit, offset } = paginationArgs;
-    return this.usersRepository.find({
-      ...(limit ? { take: limit } : {}),
-      ...(offset ? { skip: offset } : {}),
+    const res = await  this.prismaService.admin.findMany({
+      ...(paginationArgs.limit ? { take: paginationArgs.limit } : {}),
+      ...(paginationArgs.offset ? { skip: paginationArgs.offset } : {}),
       ...(filters ? { where: filters } : {}),
-    });
+    })
+    return plainToInstance(Admin, res);
   }
 
   public async findOneById(id: string): Promise<Admin> {
-    const user = await this.usersRepository.findOne({
+    const entity = await this.prismaService.admin.findFirst({
       where: { id },
     });
 
-    if (!user) {
-      throw new UserInputError(`User #${id} not found`);
+    if (!entity) {
+      throw new UserInputError(`Admin #${id} not found`);
     }
-    return user;
+    return plainToInstance(Admin, entity);
   }
 
-  public async findByProp(data: FindOptionsWhere<Admin>) {
-    return this.usersRepository.findOneBy(data);
+  public async findByProp(data: Prisma.adminWhereInput) {
+    const entity = await this.prismaService.admin.findFirst({
+      where: data,
+    });
+    if (!entity) {
+      throw new UserInputError(`Admin not found`);
+    }
+    return plainToInstance(Admin, entity);
   }
 
-  public async create(createUserInput: CreateAdminInput): Promise<Admin> {
-    const user = this.usersRepository.create({ ...createUserInput });
-    return this.usersRepository.save(user);
+  public async create(
+    createAdminInput: CreateAdminInput
+  ): Promise<Admin> {
+    const entity = this.prismaService.admin.create({
+      data: {
+        ...createAdminInput,
+        password: this.hashPasswordIfNotHashed(createAdminInput.password),
+      },
+    });
+    return plainToInstance(Admin, entity);
   }
 
   public async update(
     id: string,
-    updateUserInput: UpdateAdminInput
+    updateAdminInput: UpdateAdminInput
   ): Promise<Admin> {
-    const user = await this.usersRepository.preload({
-      id,
-      ...updateUserInput,
-    });
-
-    if (!user) {
-      throw new UserInputError(`User #${id} not found`);
+    const entity = await this.findOneById(id);
+    if (!entity) {
+      throw new UserInputError(`Admin #${id} not found`);
     }
-    return this.usersRepository.save(user);
+    if (updateAdminInput.password) {
+      updateAdminInput.password = this.hashPasswordIfNotHashed(updateAdminInput.password);
+    }
+    await this.prismaService.admin.update({
+      where: { id },
+      data: {
+        ...updateAdminInput,
+      },
+    });
+    const newEntity = await this.findOneById(id);
+    return plainToInstance(Admin, newEntity);
   }
 
   public async remove(id: string) {
-    const user = await this.findOneById(id);
-    return this.usersRepository.remove(user);
+    const entity = await this.findOneById(id);
+    if (!entity) {
+      throw new UserInputError(`Admin #${id} not found`);
+    }
+    await this.prismaService.admin.delete({
+      where: { id },
+    });
+    return true;
+  }
+
+  private hashPasswordIfNotHashed(password: string) {
+    let newPassword = password;
+    if(!isStringHashed(password)) {
+      const salt = bcrypt.genSaltSync();
+      newPassword = bcrypt.hashSync(password, salt);
+    }
+    return newPassword;
   }
 }

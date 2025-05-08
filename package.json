@@ -4,7 +4,15 @@
   "license": "MIT",
   "scripts": {
     "api:start": "npx nx serve api",
-    "web:start": "npx nx serve web"
+    "web:start": "npx nx serve web",
+    "seed": "ts-node api/prisma/seed.ts",
+    "prisma:generate": "npx prisma generate",
+    "prisma:pull": "npx prisma db pull",
+    "prisma:migrate-dev": "npx prisma migrate dev",
+    "prisma:migrate-deploy": "npx prisma migrate deploy"
+  },
+  "prisma": {
+    "schema": "api/prisma/schema.prisma"
   },
   "private": true,
   "dependencies": {
@@ -19,7 +27,7 @@
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^10.0.2",
-    "@nestjs/typeorm": "^11.0.0",
+    "@prisma/client": "^6.7.0",
     "@types/antd": "^0.12.32",
     "antd": "^5.24.9",
     "apollo-server-express": "^3.13.0",
@@ -32,13 +40,11 @@
     "graphql-type-json": "^0.3.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "pg": "^8.15.6",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-router-dom": "6.29.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.0",
-    "typeorm": "^0.3.22"
+    "rxjs": "^7.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.14.5",
@@ -83,6 +89,7 @@
     "jsonc-eslint-parser": "^2.1.0",
     "nx": "20.8.1",
     "prettier": "^2.6.2",
+    "prisma": "^6.7.0",
     "react-refresh": "^0.10.0",
     "ts-jest": "^29.1.0",
     "ts-morph": "^24.0.0",

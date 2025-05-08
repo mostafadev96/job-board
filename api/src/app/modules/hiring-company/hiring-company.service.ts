@@ -1,67 +1,81 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
 import { UserInputError } from '@nestjs/apollo';
 import { HiringCompany } from './entities/hiring-company.entity';
 import { PaginationArgs } from '../../graphql/inputs/pagination-args.input';
 import { CreateHiringCompanyInput } from './types/create-hiring-company.dto';
 import { UpdateHiringCompanyInput } from './types/update-hiring-company.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class HiringCompanyService {
   constructor(
-    @InjectRepository(HiringCompany)
-    private readonly repository: Repository<HiringCompany>,
+    private readonly prismaService: PrismaService,
   ) {}
 
-  public async findAll(paginationArgs: PaginationArgs, filters?: FindOptionsWhere<HiringCompany>): Promise<HiringCompany[]> 
+  public async findAll(paginationArgs: PaginationArgs, filters?: Prisma.hiring_companyWhereInput): Promise<HiringCompany[]> 
   {
-    const { limit, offset } = paginationArgs;
-    return this.repository.find({
-      ...(limit ? { take: limit } : {}),
-      ...(offset ? { skip: offset } : {}),
+    const res = await  this.prismaService.hiring_company.findMany({
+      ...(paginationArgs.limit ? { take: paginationArgs.limit } : {}),
+      ...(paginationArgs.offset ? { skip: paginationArgs.offset } : {}),
       ...(filters ? { where: filters } : {}),
-    });
+      include: {
+        job: true
+      }
+    })
+    return plainToInstance(HiringCompany, res);
   }
 
   public async findOneById(id: string): Promise<HiringCompany> {
-    const entity = await this.repository.findOne({
+    const entity = await this.prismaService.hiring_company.findFirst({
         where: { id },
+        include: {
+          job: true
+        }
     });
 
     if (!entity) {
       throw new UserInputError(`company #${id} not found`);
     }
-    return entity;
+    return plainToInstance(HiringCompany, entity);
   }
 
   public async create(createHiringCompanyInput: CreateHiringCompanyInput): Promise<HiringCompany> {
-    const entity = this.repository.create({ ...createHiringCompanyInput});
-    return this.repository.save(entity);
+    const entity = await this.prismaService.hiring_company.create({
+      data: {
+        ...createHiringCompanyInput,
+      },
+    });
+    return plainToInstance(HiringCompany, entity);
   }
 
   public async update(
     id: string,
     updateHiringCompanyInput: UpdateHiringCompanyInput,
   ): Promise<HiringCompany> {
-
-    const user = await this.repository.preload({
-      id,
-      ...updateHiringCompanyInput,
-    });
-
-    if (!user) {
+    const entity = await this.findOneById(id);
+    if (!entity) {
       throw new UserInputError(`Company #${id} not found`);
     }
-    return this.repository.save(user);
+    await this.prismaService.hiring_company.update({
+      where: { id },
+      data: {
+        ...updateHiringCompanyInput,
+      },
+    });
+    const newEntity = await this.findOneById(id);
+    return plainToInstance(HiringCompany, newEntity);
   }
 
   public async remove(id: string) {
-    const user = await this.findOneById(id);
-    if (!user) {
+    const entity = await this.findOneById(id);
+    if (!entity) {
       throw new UserInputError(`Company #${id} not found`);
     }
-    await this.repository.remove(user);
+    await this.prismaService.hiring_company.delete({
+      where: { id },
+    });
     return true;
   }
 }

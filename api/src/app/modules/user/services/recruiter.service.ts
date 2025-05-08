@@ -1,74 +1,110 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
-import { FindOptionsWhere, Repository } from 'typeorm';
 import { UserInputError } from '@nestjs/apollo';
-import { Recruiter } from '../entities/recruiter.entity';
 import { PaginationArgs } from '../../../graphql/inputs/pagination-args.input';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
+import { Recruiter } from '../entities/recruiter.entity';
 import { CreateRecruiterInput } from '../types/recruiters/create-recruiter.input';
 import { UpdateRecruiterInput } from '../types/recruiters/update-recruiter.input';
+import * as bcrypt from 'bcrypt';
+import { isStringHashed } from '../utils/hashs';
 
 @Injectable()
 export class RecruiterService {
   constructor(
-    @InjectRepository(Recruiter)
-    private readonly usersRepository: Repository<Recruiter>,
+    private readonly prismaService: PrismaService,
   ) {}
 
-  public async findAll(paginationArgs?: PaginationArgs, filters?: FindOptionsWhere<Recruiter>): Promise<Recruiter[]> 
-  {
-    const { limit, offset } = paginationArgs;
-    return this.usersRepository.find({
-      ...(limit ? { take: limit } : {}),
-      ...(offset ? { skip: offset } : {}),
+  public async findAll(
+    paginationArgs: PaginationArgs,
+    filters?: Prisma.recruiterWhereInput
+  ): Promise<Recruiter[]> {
+    const res = await  this.prismaService.recruiter.findMany({
+      ...(paginationArgs.limit ? { take: paginationArgs.limit } : {}),
+      ...(paginationArgs.offset ? { skip: paginationArgs.offset } : {}),
       ...(filters ? { where: filters } : {}),
-    });
+      include: {
+        hiring_company: true,
+      }
+    })
+    return plainToInstance(Recruiter, res);
   }
 
   public async findOneById(id: string): Promise<Recruiter> {
-    const user = await this.usersRepository.findOne({
-        where: { id },
-        relations: {
-          hiringCompany: true,
-        },
+    const entity = await this.prismaService.recruiter.findFirst({
+      where: { id },
+      include: {
+        hiring_company: true,
+      }
     });
 
-    if (!user) {
-      throw new UserInputError(`User #${id} not found`);
+    if (!entity) {
+      throw new UserInputError(`Recruiter #${id} not found`);
     }
-    return user;
+    return plainToInstance(Recruiter, entity);
   }
 
-  public async findByProp(data: FindOptionsWhere<Recruiter>) {
-    return this.usersRepository.findOneBy(data);
+  public async findByProp(data: Prisma.recruiterWhereInput) {
+    const entity = await this.prismaService.recruiter.findFirst({
+      where: data,
+    });
+    if (!entity) {
+      throw new UserInputError(`Recruiter not found`);
+    }
+    return plainToInstance(Recruiter, entity);
   }
 
-  public async create(createUserInput: CreateRecruiterInput): Promise<Recruiter> {
-    createUserInput.password = bcrypt.hashSync(createUserInput.password, 8);
-
-    const user = this.usersRepository.create({ ...createUserInput});
-    return this.usersRepository.save(user);
+  public async create(
+    createRecruiterInput: CreateRecruiterInput
+  ): Promise<Recruiter> {
+    const entity = this.prismaService.recruiter.create({
+      data: {
+        ...createRecruiterInput,
+        password: this.hashPasswordIfNotHashed(createRecruiterInput.password),
+      },
+    });
+    return plainToInstance(Recruiter, entity);
   }
 
   public async update(
     id: string,
-    updateUserInput: UpdateRecruiterInput,
+    updateRecruiterInput: UpdateRecruiterInput
   ): Promise<Recruiter> {
-    updateUserInput.password = bcrypt.hashSync(updateUserInput.password, 8);
-
-    const user = await this.usersRepository.preload({
-      id,
-      ...updateUserInput,
-    });
-
-    if (!user) {
-      throw new UserInputError(`User #${id} not found`);
+    const entity = await this.findOneById(id);
+    if (!entity) {
+      throw new UserInputError(`Recruiter #${id} not found`);
     }
-    return this.usersRepository.save(user);
+    if (updateRecruiterInput.password) {
+      updateRecruiterInput.password = this.hashPasswordIfNotHashed(updateRecruiterInput.password);
+    }
+    await this.prismaService.recruiter.update({
+      where: { id },
+      data: {
+        ...updateRecruiterInput,
+      },
+    });
+    const newEntity = await this.findOneById(id);
+    return plainToInstance(Recruiter, newEntity);
   }
 
   public async remove(id: string) {
-    const user = await this.findOneById(id);
-    return this.usersRepository.remove(user);
+    const entity = await this.findOneById(id);
+    if (!entity) {
+      throw new UserInputError(`Recruiter #${id} not found`);
+    }
+    await this.prismaService.recruiter.delete({
+      where: { id },
+    });
+    return true;
+  }
+
+  private hashPasswordIfNotHashed(password: string) {
+    let newPassword = password;
+    if(!isStringHashed(password)) {
+      const salt = bcrypt.genSaltSync();
+      newPassword = bcrypt.hashSync(password, salt);
+    }
+    return newPassword;
   }
 }

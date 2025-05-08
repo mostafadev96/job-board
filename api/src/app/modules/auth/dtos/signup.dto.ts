@@ -15,6 +15,10 @@ export class SignupDto {
     @IsString()
     @MaxLength(80)
     readonly name: string;
+
+    @IsNotEmpty()
+    @IsString()
+    readonly phone: string;
   
     @IsNotEmpty()
     @IsString()
