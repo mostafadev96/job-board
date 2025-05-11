@@ -9,6 +9,7 @@ import {
   Modal,
   notification,
   Popconfirm,
+  Select,
   Space,
   Table,
   Tag,
@@ -19,30 +20,45 @@ import { gql, useApolloClient } from '@apollo/client';
 import { canAccess } from '../../utils/auth-util';
 import { useAuth } from '../../contexts/auth-context';
 import { Action, Resource } from '@job-board/rbac';
+import TextArea from 'antd/es/input/TextArea';
 
 interface DataType {
   id: string;
-  email: string;
-  name: string;
+  title: string;
+  country: string;
   active: string;
+  contractType: string;
+  recruiter_name: string;
+  hiring_company_title: string;
+  created_at: string;
 }
 
 const LIST_QUERY = gql`
   query {
-    admins {
-      email
-      name
+    jobs {
+      title
+      country
+      contractType
       active
+      recruiter {
+        name
+      }
+      hiring_company {
+        title
+      }
+      created_at
       id
     }
   }
 `;
 
 const ResourceForm = ({ form, data, onSubmit }: { form: FormInstance; data?: any, onSubmit: (...args: any[]) => any }) => {
-  form.setFieldValue('email', data?.email || '');
-  form.setFieldValue('name', data?.name || '');
-  form.setFieldValue('password', '');
+  const { Option } = Select;
+  form.setFieldValue('title', data?.email || '');
+  form.setFieldValue('desctiption', data?.name || '');
+  form.setFieldValue('country', data?.country || '');
   form.setFieldValue('active', data?.active || '');
+  form.setFieldValue('contractType', data?.contractType || '');
   return (
     <Form
       labelAlign="left"
@@ -54,48 +70,58 @@ const ResourceForm = ({ form, data, onSubmit }: { form: FormInstance; data?: any
       style={{ textAlign: 'left' }}
     >
       <Form.Item
-        name="email"
-        label="Email"
+        name="title"
+        label="Title"
         rules={[
           {
             required: !data,
-            message: 'Please enter email!',
-          },
-          {
-            type: 'email',
-            message: 'enter a valid email',
+            message: 'Please enter title!',
           },
         ]}
       >
         <Input />
       </Form.Item>
-
       <Form.Item
-        name="name"
-        label="Name"
+        name="country"
+        label="Country"
         rules={[
           {
             required: !data,
-            message: 'Please enter name',
+            message: 'Please enter country',
             whitespace: true,
           },
         ]}
       >
         <Input />
       </Form.Item>
-
       <Form.Item
-        name="password"
-        label="Password"
+        name="contractType"
+        label="Contract Type"
+        rules={[{ required: true, message: 'Please select contract type!' }]}
+      >
+        <Select placeholder="select the contract type">
+          <Option value="FULL_TIME">Full time</Option>
+          <Option value="PART_TIME">part time</Option>
+          <Option value="FREELANCE">freelance</Option>
+          <Option value="INTERNSHIP">internship</Option>
+        </Select>
+      </Form.Item>
+      <Form.Item
+        name="description"
+        label="Your description"
         rules={[
           {
-            required: !data,
-            message: 'Please enter password!',
-            whitespace: true,
+            required: true,
+            message: 'Please enter your description!',
           },
         ]}
       >
-        <Input.Password disabled={data}/>
+        <TextArea
+          showCount
+          maxLength={200}
+          placeholder="disable resize"
+          style={{ height: 120, resize: 'none' }}
+        />
       </Form.Item>
       <Form.Item
         name="active"
@@ -112,7 +138,7 @@ const ResourceForm = ({ form, data, onSubmit }: { form: FormInstance; data?: any
   );
 };
 
-const AdminPage: React.FC = () => {
+const JobPage: React.FC = () => {
   const [modal1Open, setModal1Open] = useState(false);
   const [modal2Open, setModal2Open] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -136,8 +162,8 @@ const AdminPage: React.FC = () => {
       setLoading(true);
       const { data } = await client.mutate({
         mutation: gql`
-          mutation RemoveAdmin($id: String!) {
-            removeAdmin(id: $id)
+          mutation RemoveJob($id: String!) {
+            removeJob(id: $id)
           }
         `,
         variables: {
@@ -163,18 +189,18 @@ const AdminPage: React.FC = () => {
       setLoading(true);
       const { data } = await client.mutate({
         mutation: gql`
-          mutation CreateAdmin(
-            $createAdminInput: CreateAdminInput!
+          mutation CreateJob(
+            $createJobInput: CreateJobInput!
           ) {
-            createAdmin(
-              createAdminInput: $createAdminInput
+            createJob(
+              createJobInput: $createJobInput
             ) {
               id
             }
           }
         `,
         variables: {
-          createAdminInput: {
+          createJobInput: {
             ...formData,
             active: formData.active ? true: false
           },
@@ -202,19 +228,18 @@ const AdminPage: React.FC = () => {
       setLoading(true);
       const { data } = await client.mutate({
         mutation: gql`
-          mutation UpdateAdmin(
-            $updateAdminInput: UpdateAdminInput!
+          mutation UpdateJob(
+            $updateJobInput: UpdateJobInput!
           ) {
-            updateAdmin(updateAdminInput: $updateAdminInput) {
+            updateJob(updateJobInput: $updateJobInput) {
               id
             }
           }
         `,
         variables: {
-          updateAdminInput: {
+          updateJobInput: {
             id: selectedItem.id,
-            ...coreData,
-            ...(password && {password})
+            ...coreData
           },
         },
       });
@@ -240,7 +265,11 @@ const AdminPage: React.FC = () => {
         fetchPolicy: 'network-only',
       });
       console.log(data);
-      setTableData(data.admins);
+      setTableData(data.jobs.map((item: any)=> ({
+        ...item,
+        recruiter_name: item?.recruiter?.name,
+        hiring_company_title: item?.hiring_company?.title
+      })));
     } catch (error: any) {
       console.error('Error fetching data:', error);
       openNotificationWithIcon(error.message);
@@ -265,14 +294,39 @@ const AdminPage: React.FC = () => {
         key: 'id',
       },
       {
-        title: 'Email',
-        dataIndex: 'email',
-        key: 'email',
+        title: 'Title',
+        dataIndex: 'title',
+        key: 'title',
       },
       {
-        title: 'Name',
-        dataIndex: 'name',
-        key: 'name',
+        title: 'Country',
+        dataIndex: 'country',
+        key: 'country',
+      },
+      {
+        title: 'Contract Type',
+        dataIndex: 'contractType',
+        key: 'contractType',
+      },
+      {
+        title: 'Recruiter Name',
+        dataIndex: 'recruiter_name',
+        key: 'recruiter_name',
+      },
+      {
+        title: 'Company title',
+        dataIndex: 'hiring_company_title',
+        key: 'hiring_company_title',
+      },
+      {
+        title: 'Country',
+        dataIndex: 'country',
+        key: 'country',
+      },
+      {
+        title: 'Creation Date',
+        dataIndex: 'created_at',
+        key: 'created_at',
       },
       {
         title: 'Active',
@@ -289,7 +343,7 @@ const AdminPage: React.FC = () => {
         key: 'action',
         render: (_, record) => (
           <Space size="middle">
-            {canAccess(user.role, Resource.ADMIN, Action.UPDATE) && (
+            {canAccess(user.role, Resource.JOB, Action.UPDATE) && (
               <Button
                 onClick={() => {
                   setModal2Open(true);
@@ -299,7 +353,7 @@ const AdminPage: React.FC = () => {
                 Update
               </Button>
             )}
-            {canAccess(user.role, Resource.ADMIN, Action.DELETE) && (
+            {canAccess(user.role, Resource.JOB, Action.DELETE) && (
               <Popconfirm
                 title="Delete the item"
                 description="Are you sure to delete this item?"
@@ -330,9 +384,9 @@ const AdminPage: React.FC = () => {
         wrap
       >
         <Paragraph style={{ fontSize: '22px' }} strong>
-          Admins
+          Jobs
         </Paragraph>
-        {canAccess(user.role, Resource.ADMIN, Action.CREATE) && (
+        {canAccess(user.role, Resource.JOB, Action.CREATE) && (
           <Button
             type="primary"
             size="large"
@@ -341,7 +395,7 @@ const AdminPage: React.FC = () => {
             }}
             onClick={() => setModal1Open(true)}
           >
-            Add Admin
+            Add Job
           </Button>
         )}
       </Flex>
@@ -351,7 +405,7 @@ const AdminPage: React.FC = () => {
         dataSource={tableData}
       />
       <Modal
-        title="Create new admin"
+        title="Create new item"
         centered
         open={modal1Open}
         okText="Add"
@@ -362,7 +416,7 @@ const AdminPage: React.FC = () => {
         <ResourceForm form={form} onSubmit={createResource}/>
       </Modal>
       <Modal
-        title="Update admin"
+        title="Update item"
         centered
         open={modal2Open && !!selectedItem}
         okText="Update"
@@ -376,4 +430,4 @@ const AdminPage: React.FC = () => {
   );
 };
 
-export default AdminPage;
+export default JobPage;

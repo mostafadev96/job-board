@@ -6,17 +6,14 @@ import { Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { Job } from '../entities/job.entity';
 import { CreateJobInput } from '../types/jobs/create-job.input';
-import { REQUEST } from '@nestjs/core';
 import { UpdateJobInput } from '../types/jobs/update-job.input';
+import { JWTPayload } from '../../auth/types/jwt';
 
 @Injectable()
 export class JobService {
-  private currentUser = null;
   constructor(
     private readonly prismaService: PrismaService,
-    @Inject(REQUEST) private readonly request: Request
   ) {
-    this.currentUser = (this.request as any).user;
   }
 
   public async findAll(
@@ -57,11 +54,12 @@ export class JobService {
   }
 
   public async create(
-    createJobInput: CreateJobInput
+    createJobInput: CreateJobInput,
+    user: JWTPayload
   ): Promise<Job> {
     const recruiter = await this.prismaService.recruiter.findFirst({
       where: {
-        id: this.currentUser.id,
+        id: user.sub,
       },
     });
     const entity = this.prismaService.job.create({
@@ -75,9 +73,9 @@ export class JobService {
   }
 
   public async update(
-    id: string,
     updateJobInput: UpdateJobInput
   ): Promise<Job> {
+    const { id, ...coreData } = updateJobInput;
     const entity = await this.findOneById(id);
     if (!entity) {
       throw new UserInputError(`Job #${id} not found`);
@@ -85,7 +83,7 @@ export class JobService {
     await this.prismaService.job.update({
       where: { id },
       data: {
-        ...updateJobInput,
+        ...coreData,
       },
     });
     const newEntity = await this.findOneById(id);

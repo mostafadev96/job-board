@@ -8,7 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { PERMISSION_KEY } from '../decorators/permission.decorator';
-import { RolePermissions } from '../utils/auth-util';
+import { RolePermissions } from '@job-board/rbac';
 
 @Injectable()
 export class RbacGuard implements CanActivate {
@@ -26,10 +26,13 @@ export class RbacGuard implements CanActivate {
     if (!resource || !action) return true; // no permission check
 
     const role = user.role;
+    console.log(role);
     const permissions = RolePermissions[role];
+    console.log(permissions);
 
     if (!permissions) throw new ForbiddenException('No permissions for this role');
     const allowedActions = permissions[resource] || [];
+    console.log(allowedActions);
 
     if (!allowedActions.includes(action)) {
       throw new ForbiddenException(`Access denied for ${action} on ${resource}`);

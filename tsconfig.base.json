@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@job-board/rbac": ["packages/rbac.ts"]
+      "@job-board/rbac": ["packages/rbac.ts"],
+      "@job-board/config": ["packages/config/frontend/environment.ts"],
     }
   },
   "exclude": ["node_modules", "tmp"]

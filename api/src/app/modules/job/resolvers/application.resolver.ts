@@ -12,6 +12,8 @@ import { ApplicationStatus } from '../entities/application-status.entity';
 import { RbacGuard } from '../../auth/guards/rbac.guard';
 import { Permission } from '../../auth/decorators/permission.decorator';
 import { Action, Resource } from '@job-board/rbac';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { JWTPayload } from '../../auth/types/jwt';
 
 @Resolver(() => Application)
 @UseGuards(GqlAuthGuard, RbacGuard)
@@ -51,22 +53,25 @@ export class ApplicationResolver {
   @Permission(Resource.APPLICATION, Action.APPLY)
   public async createApplication(
     @Args('createApplicationInput')
-    createApplicationInput: CreateApplicationInput
+    createApplicationInput: CreateApplicationInput,
+    @CurrentUser() user: JWTPayload
+    
   ): Promise<Application> {
-    return await this.applicationService.create(createApplicationInput);
+    return await this.applicationService.create(createApplicationInput, user);
   }
 
   @Mutation(() => Application)
   @Permission(Resource.APPLICATION, Action.UPDATE)
   public async updateApplication(
-    @Args('id') id: string,
     @Args('updateApplicationInput')
-    updateApplicationInput: UpdateApplicationInput
+    updateApplicationInput: UpdateApplicationInput,
+    @CurrentUser() user: JWTPayload
+
   ): Promise<Application> {
-    return await this.applicationService.update(id, updateApplicationInput);
+    return await this.applicationService.update(updateApplicationInput, user);
   }
 
-  @Mutation(() => Application)
+  @Mutation(() => Boolean)
   @Permission(Resource.APPLICATION, Action.DELETE)
   public async removeApplication(@Args('id') id: string) {
     return this.applicationService.remove(id);

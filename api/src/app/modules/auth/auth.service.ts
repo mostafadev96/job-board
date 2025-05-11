@@ -9,6 +9,7 @@ import { SignupDto } from "./dtos/signup.dto";
 import { RecruiterService } from "../user/services/recruiter.service";
 import { AdminService } from "../user/services/admin.service";
 import { SeekerService } from "../user/services/seeker.service";
+import { JWTPayload } from "./types/jwt";
 
 @Injectable()
 export class AuthService {
@@ -58,17 +59,26 @@ export class AuthService {
   }
 
   async signup(dto: SignupDto) {
-    const oldUser = await this.seekerService.findByProp({ email: dto.email });
+    const {
+      email,
+      name,
+      phone,
+      password,
+      ..._
+    } = dto
+    const oldUser = await this.seekerService.findByProp({ email }, false);
     if (oldUser) {
       throw new UnauthorizedException('Use another email');
     }
     const salt = bcrypt.genSaltSync();
     const newUser = await this.seekerService.create({
-      ...dto,
-      password: bcrypt.hashSync(dto.password, salt),
+      email,
+      name,
+      phone,
+      password: bcrypt.hashSync(password, salt),
     });
 
-    const payload = {
+    const payload: JWTPayload = {
       sub: newUser.id,
       email: newUser.email,
       role: UserRole.SEEKER,

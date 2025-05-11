@@ -7,6 +7,7 @@ import { GraphqlOptions } from './graphql/graphql.options';
 import { HiringCompanyModule } from './modules/hiring-company/hiring-company.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
+import { AppResolver } from './app.resolver';
 
 
 @Module({
@@ -22,6 +23,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
     AuthModule
   ],
   providers: [
+    AppResolver
   ],
 })
 export class AppModule {}

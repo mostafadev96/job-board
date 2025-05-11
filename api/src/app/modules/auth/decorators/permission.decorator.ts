@@ -1,5 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { Action, Resource } from '../utils/auth-util';
+import { Action, Resource } from '@job-board/rbac';
+
 
 export const PERMISSION_KEY = 'permission';
 

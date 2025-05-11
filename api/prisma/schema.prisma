@@ -41,7 +41,7 @@ model application_status {
   recruiterId       String                         @db.Uuid
   recruiterName     String?                        @db.VarChar
   recruiterResponse String?                        @db.VarChar
-  status            application_status_enum        @default(APPLIED)
+  status            application_status_status_enum @default(APPLIED)
   created_at        DateTime                       @default(dbgenerated("('now'::text)::timestamp(6) with time zone")) @db.Timestamp(6)
   updated_at        DateTime                       @default(dbgenerated("('now'::text)::timestamp(6) with time zone")) @db.Timestamp(6)
   application       application                    @relation(fields: [applicationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_117f791db002e1fe951cf1eefb8")
@@ -108,6 +108,17 @@ enum application_jobcontracttype_enum {
 }
 
 enum application_status_enum {
+  APPLIED
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+  WITHDRAWN
+  ACCEPTED
+  DECLINED
+}
+
+enum application_status_status_enum {
   APPLIED
   INTERVIEW
   OFFER

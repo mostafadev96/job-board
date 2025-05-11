@@ -58,13 +58,12 @@ export class SeekerResolver {
   @Mutation(() => Seeker)
   @Permission(Resource.SEEKER, Action.UPDATE)
   public async updateSeeker(
-    @Args('id') id: string,
     @Args('updateSeekerInput') updateSeekerInput: UpdateSeekerInput
   ): Promise<Seeker> {
-    return await this.usersService.update(id, updateSeekerInput);
+    return await this.usersService.update(updateSeekerInput);
   }
 
-  @Mutation(() => Seeker)
+  @Mutation(() => Boolean)
   @Permission(Resource.SEEKER, Action.DELETE)
   public async removeSeeker(@Args('id') id: string) {
     return this.usersService.remove(id);

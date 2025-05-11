@@ -1,13 +1,17 @@
 import React from 'react';
 import {
   Layout,
+  Typography,
 } from 'antd';
 const { Footer } = Layout;
+const { Text } = Typography;
 
 const FooterComponent: React.FC = () => {
   return (
     <Footer style={{ textAlign: 'center' }}>
-        Ant Design ©{new Date().getFullYear()} Created by Ant UED
+        Job Board ©{new Date().getFullYear()} Created by <Text style={{
+          lineHeight: 0
+        }} type='danger'>Xolize</Text>
     </Footer>
   );
 };

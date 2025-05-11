@@ -7,7 +7,6 @@ import HeaderComponent from '../partials/header';
 import FooterComponent from '../partials/footer';
 const { Content } = Layout;
 
-
 const AppLayout: React.FC = () => {
   return (
     <Layout>
@@ -17,7 +16,6 @@ const AppLayout: React.FC = () => {
           style={{
             padding: 24,
             minHeight: 380,
-            height: '100%',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',

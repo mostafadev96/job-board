@@ -43,13 +43,12 @@ export class AdminResolver {
   @Mutation(() => Admin)
   @Permission(Resource.ADMIN, Action.UPDATE)
   public async updateAdmin(
-    @Args('id') id: string,
     @Args('updateAdminInput') updateAdminInput: UpdateAdminInput,
   ): Promise<Admin> {
-    return await this.usersService.update(id, updateAdminInput);
+    return await this.usersService.update(updateAdminInput);
   }
 
-  @Mutation(() => Admin)
+  @Mutation(() => Boolean)
   @Permission(Resource.ADMIN, Action.DELETE)
   public async removeAdmin(@Args('id') id: string) {
     return this.usersService.remove(id);

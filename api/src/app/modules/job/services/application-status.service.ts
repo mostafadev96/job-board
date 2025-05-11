@@ -7,16 +7,13 @@ import { UpdateApplicationStatusInput } from '../types/application-statuses/upda
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
-import { REQUEST } from '@nestjs/core';
+import { JWTPayload } from '../../auth/types/jwt';
 
 @Injectable()
 export class ApplicationStatusService {
-  private currentUser = null;
   constructor(
     private readonly prismaService: PrismaService,
-    @Inject(REQUEST) private readonly request: Request
   ) {
-    this.currentUser = (this.request as any).user;
   }
 
   public async findAll(
@@ -61,27 +58,36 @@ export class ApplicationStatusService {
   }
 
   public async create(
-    createApplicationStatusInput: CreateApplicationStatusInput
+    createApplicationStatusInput: CreateApplicationStatusInput,
+    currUser: JWTPayload
   ): Promise<ApplicationStatus> {
     const recruiter = await this.prismaService.recruiter.findFirst({
       where: {
-        id: this.currentUser.id,
+        id: currUser.sub,
       },
     });
-    const user = await this.prismaService.application_status.create({
+    const entity = await this.prismaService.application_status.create({
       data: {
         ...createApplicationStatusInput,
         recruiterId: recruiter.id,
         recruiterName: recruiter.name,
       },
     });
-    return plainToInstance(ApplicationStatus, user);
+    await this.prismaService.application.update({
+      where: {
+        id: createApplicationStatusInput.applicationId
+      },
+      data: {
+        status: createApplicationStatusInput.status
+      }
+    })
+    return plainToInstance(ApplicationStatus, entity);
   }
 
   public async update(
-    id: string,
     updateApplicationStatusInput: UpdateApplicationStatusInput
   ): Promise<ApplicationStatus> {
+    const { id, ...coreData } = updateApplicationStatusInput;
     const entity = await this.findOneById(id);
     if (!entity) {
       throw new UserInputError(`ApplicationStatus #${id} not found`);
@@ -89,7 +95,7 @@ export class ApplicationStatusService {
     await this.prismaService.application_status.update({
       where: { id },
       data: {
-        ...updateApplicationStatusInput,
+        ...coreData,
       },
     });
     const newEntity = await this.findOneById(id);

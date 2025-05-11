@@ -62,20 +62,20 @@ export class AdminService {
   }
 
   public async update(
-    id: string,
     updateAdminInput: UpdateAdminInput
   ): Promise<Admin> {
+    const { id, ...data } = updateAdminInput;
     const entity = await this.findOneById(id);
     if (!entity) {
       throw new UserInputError(`Admin #${id} not found`);
     }
-    if (updateAdminInput.password) {
-      updateAdminInput.password = this.hashPasswordIfNotHashed(updateAdminInput.password);
+    if (data.password) {
+      data.password = this.hashPasswordIfNotHashed(data.password);
     }
     await this.prismaService.admin.update({
       where: { id },
       data: {
-        ...updateAdminInput,
+        ...data,
       },
     });
     const newEntity = await this.findOneById(id);

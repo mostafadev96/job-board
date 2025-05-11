@@ -8,16 +8,13 @@ import { plainToInstance } from 'class-transformer';
 import { Application } from '../entities/application.entity';
 import { CreateApplicationInput } from '../types/applications/create-application.input';
 import { UpdateApplicationInput } from '../types/applications/update-application.input copy';
-import { REQUEST } from '@nestjs/core';
+import { JWTPayload } from '../../auth/types/jwt';
 
 @Injectable()
 export class ApplicationService {
-  private currentUser = null;
   constructor(
     private readonly prismaService: PrismaService,
-    @Inject(REQUEST) private readonly request: Request
   ) {
-    this.currentUser = (this.request as any).user;
   }
 
   public async findAll(
@@ -62,13 +59,15 @@ export class ApplicationService {
   }
 
   public async create(
-    createApplicationInput: CreateApplicationInput
+    createApplicationInput: CreateApplicationInput,
+    user: JWTPayload
   ): Promise<Application> {
     const seeker = await this.prismaService.seeker.findFirst({
       where: {
-        id: this.currentUser.id,
+        id: user.sub,
       },
     });
+    console.log(seeker);
     const job = await this.prismaService.job.findFirst({
       where: {
         id: createApplicationInput.jobId,
@@ -93,14 +92,15 @@ export class ApplicationService {
   }
 
   public async update(
-    id: string,
-    updateApplicationInput: UpdateApplicationInput
+    updateApplicationInput: UpdateApplicationInput,
+    user: JWTPayload
   ): Promise<Application> {
+    const { id, ...coreData } = updateApplicationInput;
     const entity = await this.findOneById(id);
     if (!entity) {
       throw new UserInputError(`Application #${id} not found`);
     }
-    const {jobId, seekerId, ...otherProps} = updateApplicationInput;
+    const {jobId: __, ...otherProps} = coreData;
     await this.prismaService.application.update({
       where: { id },
       data: {

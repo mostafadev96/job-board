@@ -51,9 +51,9 @@ export class HiringCompanyService {
   }
 
   public async update(
-    id: string,
     updateHiringCompanyInput: UpdateHiringCompanyInput,
   ): Promise<HiringCompany> {
+    const {id, ...coreData} = updateHiringCompanyInput;
     const entity = await this.findOneById(id);
     if (!entity) {
       throw new UserInputError(`Company #${id} not found`);
@@ -61,7 +61,7 @@ export class HiringCompanyService {
     await this.prismaService.hiring_company.update({
       where: { id },
       data: {
-        ...updateHiringCompanyInput,
+        ...coreData,
       },
     });
     const newEntity = await this.findOneById(id);

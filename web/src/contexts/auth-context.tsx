@@ -6,8 +6,8 @@ const AuthContext = createContext<any>(null);
 export const AuthProvider = ({ children }: any) => {
   const [user, setUser] = useState(getStoredUser());
 
-  const login = (userData: any, remember: boolean) => {
-    storeUser(userData, remember);
+  const login = (userData: any, role: string, remember: boolean) => {
+    storeUser(userData, role, remember);
     setUser(userData);
   };
 

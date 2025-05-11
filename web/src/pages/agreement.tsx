@@ -3,7 +3,7 @@ import { Typography } from 'antd';
 
 const { Title, Paragraph, Text } = Typography;
 
-const AgreementComponent: React.FC = () => (
+const AgreementPage: React.FC = () => (
   <Typography>
     <Title>Introduction</Title>
 
@@ -27,4 +27,4 @@ const AgreementComponent: React.FC = () => (
   </Typography>
 );
 
-export default AgreementComponent;
+export default AgreementPage;

@@ -68,20 +68,20 @@ export class RecruiterService {
   }
 
   public async update(
-    id: string,
     updateRecruiterInput: UpdateRecruiterInput
   ): Promise<Recruiter> {
+    const { id, ...corData } = updateRecruiterInput;
     const entity = await this.findOneById(id);
     if (!entity) {
       throw new UserInputError(`Recruiter #${id} not found`);
     }
-    if (updateRecruiterInput.password) {
-      updateRecruiterInput.password = this.hashPasswordIfNotHashed(updateRecruiterInput.password);
+    if (corData.password) {
+      corData.password = this.hashPasswordIfNotHashed(corData.password);
     }
     await this.prismaService.recruiter.update({
       where: { id },
       data: {
-        ...updateRecruiterInput,
+        ...corData,
       },
     });
     const newEntity = await this.findOneById(id);

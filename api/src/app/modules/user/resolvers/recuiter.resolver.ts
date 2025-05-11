@@ -65,13 +65,12 @@ export class RecruiterResolver {
   @Mutation(() => Recruiter)
   @Permission(Resource.RECRUITER, Action.UPDATE)
   public async updateRecruiter(
-    @Args('id') id: string,
     @Args('updateRecruiterInput') updateRecruiterInput: UpdateRecruiterInput
   ): Promise<Recruiter> {
-    return await this.usersService.update(id, updateRecruiterInput);
+    return await this.usersService.update(updateRecruiterInput);
   }
 
-  @Mutation(() => Recruiter)
+  @Mutation(() => Boolean)
   @Permission(Resource.RECRUITER, Action.DELETE)
   public async removeRecruiter(@Args('id') id: string) {
     return this.usersService.remove(id);

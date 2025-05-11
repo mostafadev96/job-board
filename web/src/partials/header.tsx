@@ -9,6 +9,7 @@ import {
 } from 'antd';
 import { SettingOutlined, UserOutlined } from '@ant-design/icons';
 import AppLogoComponent from '../components/app-logo';
+import { useAuth } from '../contexts/auth-context';
 const { Header } = Layout;
 
 const { Text } = Typography;
@@ -18,6 +19,21 @@ interface HeaderProps {
 }
 
 const HeaderComponent: React.FC<HeaderProps> = ({ noTitle = false }: HeaderProps) => {
+  const { user, logout } = useAuth();
+  const items = [];
+  if(!user) {
+    items.push({
+      label: (
+        <Button color="default" type='link' href='/login' variant="outlined">
+          <Text>Login</Text>
+          <UserOutlined style={{
+            color: 'rgba(0,0,0,0.88)'
+          }}/>
+        </Button>
+      ),
+      key: 'login',
+    },)
+  }
   return (
     <Header
         style={{
@@ -34,20 +50,10 @@ const HeaderComponent: React.FC<HeaderProps> = ({ noTitle = false }: HeaderProps
           theme="dark"
           mode="horizontal"
           defaultSelectedKeys={['2']}
-          items={[
-            {
-              label: (
-                <Button color="default" variant="outlined">
-                  <Text>Login</Text>
-                  <UserOutlined />
-                </Button>
-              ),
-              key: 'login',
-            },
-          ]}
+          items={items}
           style={{ flex: 1, minWidth: 0, justifyContent: 'flex-end' }}
         />
-        <Dropdown
+        { user && <Dropdown
           menu={{
             items: [
               {
@@ -66,13 +72,12 @@ const HeaderComponent: React.FC<HeaderProps> = ({ noTitle = false }: HeaderProps
               {
                 key: '2',
                 label: (
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href="https://www.antgroup.com"
-                  >
+                  <Button type='link' onClick={() => {
+                    logout();
+                    
+                  }}>
                     Logout
-                  </a>
+                  </Button>
                 ),
                 icon: <UserOutlined />,
               },
@@ -86,6 +91,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({ noTitle = false }: HeaderProps
             icon={<UserOutlined />}
           />
         </Dropdown>
+        }
       </Header>
   );
 };

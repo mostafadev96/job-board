@@ -10,6 +10,8 @@ import { UpdateApplicationStatusInput } from '../types/application-statuses/upda
 import { RbacGuard } from '../../auth/guards/rbac.guard';
 import { Permission } from '../../auth/decorators/permission.decorator';
 import { Action, Resource } from '@job-board/rbac';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { JWTPayload } from '../../auth/types/jwt';
 
 @Resolver(() => ApplicationStatus)
 @UseGuards(GqlAuthGuard, RbacGuard)
@@ -42,27 +44,27 @@ export class ApplicationStatusResolver {
   @Permission(Resource.APPLICATION_STATUS, Action.CREATE)
   public async createApplicationStatus(
     @Args('createApplicationStatusInput')
-    createApplicationStatusInput: CreateApplicationStatusInput
+    createApplicationStatusInput: CreateApplicationStatusInput,
+    @CurrentUser() user: JWTPayload
   ): Promise<ApplicationStatus> {
     return await this.applicationStatusService.create(
-      createApplicationStatusInput
+      createApplicationStatusInput,
+      user
     );
   }
 
   @Mutation(() => ApplicationStatus)
   @Permission(Resource.APPLICATION_STATUS, Action.UPDATE)
   public async updateApplicationStatus(
-    @Args('id') id: string,
     @Args('updateApplicationStatusInput')
     updateApplicationStatusInput: UpdateApplicationStatusInput
   ): Promise<ApplicationStatus> {
     return await this.applicationStatusService.update(
-      id,
       updateApplicationStatusInput
     );
   }
 
-  @Mutation(() => ApplicationStatus)
+  @Mutation(() => Boolean)
   @Permission(Resource.APPLICATION_STATUS, Action.DELETE)
   public async removeApplicationStatus(@Args('id') id: string) {
     return this.applicationStatusService.remove(id);

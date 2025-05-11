@@ -6,9 +6,6 @@ import { InputJsonValue } from '@prisma/client/runtime/library';
 @InputType()
 export class CreateApplicationInput {
   @Field()
-  seekerId: string;
-
-  @Field()
   jobId: string;
 
   @Field({ nullable: true })

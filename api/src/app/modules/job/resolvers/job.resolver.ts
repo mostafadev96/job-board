@@ -19,9 +19,11 @@ import { ApplicationService } from '../services/application.service';
 import { RbacGuard } from '../../auth/guards/rbac.guard';
 import { Permission } from '../../auth/decorators/permission.decorator';
 import { Action, Resource } from '@job-board/rbac';
+import { User } from '../../user/entities/user.entity';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { JWTPayload } from '../../auth/types/jwt';
 
 @Resolver(() => Job)
-@UseGuards(GqlAuthGuard, RbacGuard)
 export class JobResolver {
   constructor(
     private readonly jobService: JobService,
@@ -29,12 +31,12 @@ export class JobResolver {
   ) {}
 
   @Query(() => [Job])
-  @Permission(Resource.JOB, Action.VIEW)
   public async jobs(@Args() paginationArgs: PaginationArgs): Promise<Job[]> {
     return this.jobService.findAll(paginationArgs);
   }
 
   @Query(() => Job)
+  @UseGuards(GqlAuthGuard, RbacGuard)
   @Permission(Resource.JOB, Action.VIEW)
   public async job(@Args('id') id: string): Promise<Job> {
     const user = await this.jobService.findOneById(id);
@@ -55,23 +57,26 @@ export class JobResolver {
   }
 
   @Mutation(() => Job)
+  @UseGuards(GqlAuthGuard, RbacGuard)
   @Permission(Resource.JOB, Action.CREATE)
   public async createJob(
-    @Args('createJobService') createJobService: CreateJobInput
+    @Args('createJobInput') createJobInput: CreateJobInput,
+    @CurrentUser() user: JWTPayload
   ): Promise<Job> {
-    return await this.jobService.create(createJobService);
+    return await this.jobService.create(createJobInput, user);
   }
 
   @Mutation(() => Job)
+  @UseGuards(GqlAuthGuard, RbacGuard)
   @Permission(Resource.JOB, Action.UPDATE)
   public async updateJob(
-    @Args('id') id: string,
     @Args('updateJobInput') updateJobInput: UpdateJobInput
   ): Promise<Job> {
-    return await this.jobService.update(id, updateJobInput);
+    return await this.jobService.update(updateJobInput);
   }
 
-  @Mutation(() => Job)
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard, RbacGuard)
   @Permission(Resource.JOB, Action.DELETE)
   public async removeJob(@Args('id') id: string) {
     return this.jobService.remove(id);

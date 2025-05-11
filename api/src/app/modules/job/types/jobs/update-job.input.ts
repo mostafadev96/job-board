@@ -5,7 +5,4 @@ import { CreateJobInput } from "./create-job.input";
 export class UpdateJobInput extends PartialType(CreateJobInput) {
   @Field()
   id: string;
-
-  @Field()
-  active?: boolean;
 }

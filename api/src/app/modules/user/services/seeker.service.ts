@@ -39,11 +39,11 @@ export class SeekerService {
     return plainToInstance(Seeker, entity);
   }
 
-  public async findByProp(data: Prisma.seekerWhereInput) {
+  public async findByProp(data: Prisma.seekerWhereInput, throwException = true) {
     const entity = await this.prismaService.seeker.findFirst({
       where: data,
     });
-    if (!entity) {
+    if (!entity && throwException) {
       throw new UserInputError(`Seeker not found`);
     }
     return plainToInstance(Seeker, entity);
@@ -62,20 +62,20 @@ export class SeekerService {
   }
 
   public async update(
-    id: string,
     updateSeekerInput: UpdateSeekerInput
   ): Promise<Seeker> {
+    const { id, ...coreData } = updateSeekerInput;
     const entity = await this.findOneById(id);
     if (!entity) {
       throw new UserInputError(`Seeker #${id} not found`);
     }
-    if (updateSeekerInput.password) {
-      updateSeekerInput.password = this.hashPasswordIfNotHashed(updateSeekerInput.password);
+    if (coreData.password) {
+      coreData.password = this.hashPasswordIfNotHashed(coreData.password);
     }
     await this.prismaService.seeker.update({
       where: { id },
       data: {
-        ...updateSeekerInput,
+        ...coreData,
       },
     });
     const newEntity = await this.findOneById(id);

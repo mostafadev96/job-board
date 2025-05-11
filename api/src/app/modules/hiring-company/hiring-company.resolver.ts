@@ -79,11 +79,10 @@ export class HiringCompanyResolver {
   @Mutation(() => HiringCompany)
   @Permission(Resource.HIRING_COMPANY, Action.UPDATE)
   public async updateHiringCompany(
-    @Args('id') id: string,
     @Args('updateHiringCompanyInput')
     updateHiringCompanyInput: UpdateHiringCompanyInput
   ): Promise<HiringCompany> {
-    return await this.service.update(id, updateHiringCompanyInput);
+    return await this.service.update(updateHiringCompanyInput);
   }
 
   @Mutation(() => Boolean)

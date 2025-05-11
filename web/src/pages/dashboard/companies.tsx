@@ -1,115 +1,331 @@
-import React, { useState } from 'react';
-import { Button, Flex, Form, Input, Modal, Space, Table, Tag } from 'antd';
-import type { TableProps } from 'antd';
+import React, { useEffect, useState } from 'react';
+import {
+  Button,
+  Flex,
+  Form,
+  Input,
+  message,
+  Modal,
+  notification,
+  Popconfirm,
+  Space,
+  Table,
+} from 'antd';
+import type { FormInstance, PopconfirmProps, TableProps } from 'antd';
 import Paragraph from 'antd/es/typography/Paragraph';
+import { gql, useApolloClient } from '@apollo/client';
+import { canAccess } from '../../utils/auth-util';
+import { useAuth } from '../../contexts/auth-context';
+import { Action, Resource } from '@job-board/rbac';
 
 interface DataType {
-  key: string;
-  name: string;
-  age: number;
-  address: string;
-  tags: string[];
+  id: string;
+  title: string;
+  description: string;
+  country: string;
+  createdAt: string;
 }
 
-const columns: TableProps<DataType>['columns'] = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    key: 'name',
-    render: (text) => <a>{text}</a>,
-  },
-  {
-    title: 'Age',
-    dataIndex: 'age',
-    key: 'age',
-  },
-  {
-    title: 'Address',
-    dataIndex: 'address',
-    key: 'address',
-  },
-  {
-    title: 'Tags',
-    key: 'tags',
-    dataIndex: 'tags',
-    render: (_, { tags }) => (
-      <>
-        {tags.map((tag) => {
-          let color = tag.length > 5 ? 'geekblue' : 'green';
-          if (tag === 'loser') {
-            color = 'volcano';
-          }
-          return (
-            <Tag color={color} key={tag}>
-              {tag.toUpperCase()}
-            </Tag>
-          );
-        })}
-      </>
-    ),
-  },
-  {
-    title: 'Action',
-    key: 'action',
-    render: (_, record) => (
-      <Space size="middle">
-        <a>Invite {record.name}</a>
-        <a>Delete</a>
-      </Space>
-    ),
-  },
-];
+const LIST_QUERY = gql`
+  query {
+    hiringCompanies {
+      title
+      description
+      country
+      updatedAt
+      id
+    }
+  }
+`;
 
-const data: DataType[] = [
-  {
-    key: '1',
-    name: 'John Brown',
-    age: 32,
-    address: 'New York No. 1 Lake Park',
-    tags: ['nice', 'developer'],
-  },
-  {
-    key: '2',
-    name: 'Jim Green',
-    age: 42,
-    address: 'London No. 1 Lake Park',
-    tags: ['loser'],
-  },
-  {
-    key: '3',
-    name: 'Joe Black',
-    age: 32,
-    address: 'Sydney No. 1 Lake Park',
-    tags: ['cool', 'teacher'],
-  },
-];
+const ResourceForm = ({ form, data }: { form: FormInstance; data?: any }) => {
+  form.setFieldValue('title', data?.title || '')
+  form.setFieldValue('description', data?.description || '')
+  form.setFieldValue('country', data?.country || '')
+  return (
+    <Form
+      labelAlign="left"
+      labelWrap
+      form={form}
+      name="register"
+      scrollToFirstError
+      style={{ textAlign: 'left' }}
+    >
+      <Form.Item
+        name="title"
+        label="Title"
+        rules={[
+          {
+            required: true,
+            message: 'Please enter title!',
+          },
+        ]}
+      >
+        <Input />
+      </Form.Item>
+
+      <Form.Item
+        name="description"
+        label="Description"
+        rules={[
+          {
+            required: true,
+            message: 'Please enter description',
+            whitespace: true,
+          },
+        ]}
+      >
+        <Input/>
+      </Form.Item>
+
+      <Form.Item
+        name="country"
+        label="Country"
+        rules={[
+          {
+            required: true,
+            message: 'Please enter country!',
+            whitespace: true,
+          },
+        ]}
+      >
+        <Input />
+      </Form.Item>
+    </Form>
+  );
+};
 
 const CompanyPage: React.FC = () => {
   const [modal1Open, setModal1Open] = useState(false);
+  const [modal2Open, setModal2Open] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [api, contextHolder] = notification.useNotification();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [tableData, setTableData] = useState([]);
+  const [tableColumns, setTableColumns] = useState<
+    TableProps<DataType>['columns']
+  >([]);
   const [form] = Form.useForm();
+  const client = useApolloClient();
+  const openNotificationWithIcon = (message: string) => {
+    api.error({
+      message: 'Error',
+      description: message,
+    });
+  };
+  const deleteSeletectItem = async (record: any) => {
+    try {
+      setLoading(true);
+      const { data } = await client.mutate({
+        mutation: gql`
+          mutation RemoveHiringCompany($id: String!) {
+            removeHiringCompany(id: $id)
+          }
+        `,
+        variables: {
+          id: record.id,
+        },
+      });
+      console.log(data);
+      if (data.errors && data.errors.length > 0) {
+        throw new Error(data.errors[0].message);
+      }
+      await fetchTableData();
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      openNotificationWithIcon(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const createResource = async () => {
+    try {
+      const formData = form.getFieldsValue();
+      console.log(formData);
+      setLoading(true);
+      const { data } = await client.mutate({
+        mutation: gql`
+          mutation CreateHiringCompany($id: String!, $createHiringCompanyInput: CreateHiringCompanyInput!) {
+            createHiringCompany(id: $id, createHiringCompanyInput: $createHiringCompanyInput) {
+              id
+            }
+          }
+        `,
+        variables: {
+          id: selectedItem.id,
+          createHiringCompanyInput: formData
+        },
+      });
+      console.log(data);
+      if (data.errors && data.errors.length > 0) {
+        throw new Error(data.errors[0].message);
+      }
+      await fetchTableData();
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      openNotificationWithIcon(error.message);
+    } finally {
+      setLoading(false);
+      setModal2Open(false);
+      setSelectedItem(null);
+    }
+  }
+
+  const updateResource = async () => {
+    try {
+      const formData = form.getFieldsValue();
+      console.log(formData);
+      setLoading(true);
+      const { data } = await client.mutate({
+        mutation: gql`
+          mutation UpdateHiringCompany($id: String!, $updateHiringCompanyInput: UpdateHiringCompanyInput!) {
+            updateHiringCompany(id: $id, updateHiringCompanyInput: $updateHiringCompanyInput) {
+              id
+            }
+          }
+        `,
+        variables: {
+          id: selectedItem.id,
+          updateHiringCompanyInput: formData
+        },
+      });
+      console.log(data);
+      if (data.errors && data.errors.length > 0) {
+        throw new Error(data.errors[0].message);
+      }
+      await fetchTableData();
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      openNotificationWithIcon(error.message);
+    } finally {
+      setLoading(false);
+      setModal2Open(false);
+      setSelectedItem(null);
+    }
+  }
+
+  const fetchTableData = async () => {
+    try {
+      setLoading(true);
+      const { data } = await client.query({
+        query: LIST_QUERY,
+        fetchPolicy: 'network-only'
+      });
+      console.log(data);
+      setTableData(data.hiringCompanies);
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      openNotificationWithIcon(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelDeletion: PopconfirmProps['onCancel'] = (e) => {
+    console.log(e);
+    message.error('Click on No');
+  };
+  useEffect(() => {
+    fetchTableData();
+  }, [client]);
+
+  useEffect(() => {
+    setTableColumns([
+      {
+        title: 'ID',
+        dataIndex: 'id',
+        key: 'id',
+      },
+      {
+        title: 'Title',
+        dataIndex: 'title',
+        key: 'title',
+      },
+      {
+        title: 'Description',
+        dataIndex: 'description',
+        key: 'description',
+      },
+      {
+        title: 'Country',
+        dataIndex: 'country',
+        key: 'country',
+      },
+      {
+        title: 'Creation Date',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+      },
+      {
+        title: 'Action',
+        key: 'action',
+        render: (_, record) => (
+          <Space size="middle">
+            {canAccess(user.role, Resource.HIRING_COMPANY, Action.UPDATE) && (
+              <Button
+                onClick={() => {
+                  setModal2Open(true);
+                  setSelectedItem(record);
+                }}
+              >
+                Update
+              </Button>
+            )}
+            {canAccess(user.role, Resource.HIRING_COMPANY, Action.DELETE) && (
+              <Popconfirm
+                title="Delete the item"
+                description="Are you sure to delete this item?"
+                onConfirm={() => {
+                  deleteSeletectItem(record);
+                }}
+                onCancel={cancelDeletion}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button danger>Delete</Button>
+              </Popconfirm>
+            )}
+          </Space>
+        ),
+      },
+    ]);
+  }, []);
   return (
     <>
-      <Flex gap="small" justify="space-between" style={{
-        marginBottom: '16px',
-      }} wrap>
-        <Paragraph style={{ fontSize: '22px'}} strong>
+      {contextHolder}
+      <Flex
+        gap="small"
+        justify="space-between"
+        style={{
+          marginBottom: '16px',
+        }}
+        wrap
+      >
+        <Paragraph style={{ fontSize: '22px' }} strong>
           Companies
         </Paragraph>
-        <Button
-          type="primary"
-          size='large'
-          style={{
-            backgroundColor: '#001529',
-          }}
-          onClick={() => setModal1Open(true)}
-        >
-          Add Company
-        </Button>
+        {canAccess(user.role, Resource.HIRING_COMPANY, Action.CREATE) && (
+          <Button
+            type="primary"
+            size="large"
+            style={{
+              backgroundColor: '#001529',
+            }}
+            onClick={createResource}
+          >
+            Add Company
+          </Button>
+        )}
       </Flex>
-      <Table<DataType> columns={columns} dataSource={data} />
+      <Table<DataType>
+        loading={loading}
+        columns={tableColumns}
+        dataSource={tableData}
+      />
       <Modal
-        title="Assign new company"
+        title="Create new company"
         centered
         open={modal1Open}
         okText="Add"
@@ -117,46 +333,18 @@ const CompanyPage: React.FC = () => {
         onOk={() => setModal1Open(false)}
         onCancel={() => setModal1Open(false)}
       >
-        <Form
-        labelAlign="left"
-        labelWrap
-        form={form}
-        name="register"
-        scrollToFirstError
-        style={{ textAlign: 'left' }}
+        <ResourceForm form={form} />
+      </Modal>
+      <Modal
+        title="Update company"
+        centered
+        open={modal2Open && !!selectedItem}
+        okText="Update"
+        cancelText="Cancel"
+        onOk={updateResource}
+        onCancel={() => setModal2Open(false)}
       >
-        <Form.Item
-          name="email"
-          label="E-mail"
-          rules={[
-            {
-              type: 'email',
-              message: 'The input is not valid E-mail!',
-            },
-            {
-              required: true,
-              message: 'Please input your E-mail!',
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-
-        <Form.Item
-          name="name"
-          label="Name"
-          tooltip="Your name will be displayed on your profile"
-          rules={[
-            {
-              required: true,
-              message: 'Please input your Name!',
-              whitespace: true,
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-      </Form>
+        <ResourceForm form={form} data={selectedItem} />
       </Modal>
     </>
   );

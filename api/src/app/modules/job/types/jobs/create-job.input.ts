@@ -16,4 +16,7 @@ export class CreateJobInput {
   @Field(() => ContractType)
   contractType: $Enums.job_contracttype_enum;
 
+  @Field()
+  active?: boolean;
+
 }
