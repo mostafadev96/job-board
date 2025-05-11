@@ -11,4 +11,9 @@ Also the admin can show of metrics about the portal and has the ability to manag
 
 2- run `docker compose up `
 
-3- [Click on this link to open the frontend](http://localhost:4200/)
+3- From backend container, run `npm run seed` to seed admin user which is the starting potint of the app 
+
+Email: admin@job-board.com
+Password: 12345678
+
+4- [Click on this link to open the frontend](http://localhost:4200/)

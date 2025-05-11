@@ -5,7 +5,7 @@
   "scripts": {
     "api:start": "npx nx serve api",
     "web:start": "npx nx serve web",
-    "seed": "ts-node api/prisma/seed.ts",
+    "seed": "npx nx run api:seed",
     "prisma:generate": "npx prisma generate",
     "prisma:pull": "npx prisma db pull",
     "prisma:migrate-dev": "npx prisma migrate dev",

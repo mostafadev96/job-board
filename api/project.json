@@ -17,6 +17,12 @@
         }
       }
     },
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node --project tsconfig.seeder.json api/prisma/seeder.ts"
+      }
+    },
     "serve": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
