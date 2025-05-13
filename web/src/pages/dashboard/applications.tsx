@@ -4,11 +4,13 @@ import {
   Flex,
   Form,
   Input,
+  List,
   Modal,
   notification,
   Select,
   Space,
   Table,
+  Typography,
 } from 'antd';
 import type { FormInstance, TableProps } from 'antd';
 import Paragraph from 'antd/es/typography/Paragraph';
@@ -88,8 +90,10 @@ const ResourceForm = ({ form, data }: { form: FormInstance; data?: any }) => {
 };
 
 const ApplicationPage: React.FC = () => {
+  const [modal1Open, setModal1Open] = useState(false);
   const [modal2Open, setModal2Open] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [viewedItem, setViewedItem] = useState<any>(null);
   const [api, contextHolder] = notification.useNotification();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -161,6 +165,45 @@ const ApplicationPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const viewSingleResource = async (id: string) => {
+    try {
+      setLoading(true);
+      const { data } = await client.query({
+        query: gql`
+          query singleApplication($id: String!) {
+            application (
+              id: $id
+            ) {
+              seekerName
+              seekerPhone
+              seekerEmail
+              seekerShortDescription
+              experiences
+              education
+              jobTitle
+              jobContractType
+              jobId
+              status
+              created_at
+              id
+            }
+          }
+        `,
+        variables: {
+          id
+        },
+        fetchPolicy: 'network-only'
+      });
+      console.log(data);
+      setViewedItem(data.application);
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      openNotificationWithIcon(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     fetchTableData();
   }, [client]);
@@ -212,6 +255,17 @@ const ApplicationPage: React.FC = () => {
                 Change status
               </Button>
             )}
+            {canAccess(user.role, Resource.APPLICATION, Action.VIEW) && (
+              <Button
+                onClick={() => {
+                  setModal1Open(true);
+                  setSelectedItem(record);
+                  viewSingleResource(record.id)
+                }}
+              >
+                View details
+              </Button>
+            )}
           </Space>
         ),
       },
@@ -247,6 +301,28 @@ const ApplicationPage: React.FC = () => {
         onCancel={() => setModal2Open(false)}
       >
         <ResourceForm form={form} data={selectedItem} />
+      </Modal>
+      <Modal
+        title="View details"
+        centered
+        open={modal1Open && !!viewedItem}
+        cancelText={false}
+        footer={
+          <Button type="primary" onClick={() => setModal1Open(false)}>
+            Close
+          </Button>
+        }
+      >
+        <List
+          bordered
+          loading={loading}
+          dataSource={viewedItem && Object.keys(viewedItem).sort().filter(item => item !== "__typename")}
+          renderItem={(itemKey: string) => (
+            <List.Item key={itemKey}>
+              <Typography.Text>{itemKey}</Typography.Text>: <Typography.Text type='success'>{selectedItem[itemKey]}</Typography.Text>
+            </List.Item>
+          )}
+        />
       </Modal>
     </>
   );

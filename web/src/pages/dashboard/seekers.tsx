@@ -152,8 +152,8 @@ const SeekerPage: React.FC = () => {
       setLoading(true);
       const { data } = await client.mutate({
         mutation: gql`
-          mutation RemoveRecruiter($id: String!) {
-            removeRecruiter(id: $id)
+          mutation RemoveSeeker($id: String!) {
+            removeSeeker(id: $id)
           }
         `,
         variables: {
@@ -179,18 +179,18 @@ const SeekerPage: React.FC = () => {
       setLoading(true);
       const { data } = await client.mutate({
         mutation: gql`
-          mutation CreateRecruiter(
-            $createRecruiterInput: CreateRecruiterInput!
+          mutation CreateSeeker(
+            $createSeekerInput: CreateSeekerInput!
           ) {
-            createRecruiter(
-              createRecruiterInput: $createRecruiterInput
+            createSeeker(
+              createSeekerInput: $createSeekerInput
             ) {
               id
             }
           }
         `,
         variables: {
-          createRecruiterInput: {
+          createSeekerInput: {
             ...formData,
             active: formData.active ? true: false
           },
@@ -206,7 +206,7 @@ const SeekerPage: React.FC = () => {
       openNotificationWithIcon(error.message);
     } finally {
       setLoading(false);
-      setModal2Open(false);
+      setModal1Open(false);
       setSelectedItem(null);
     }
   };
@@ -218,16 +218,16 @@ const SeekerPage: React.FC = () => {
       setLoading(true);
       const { data } = await client.mutate({
         mutation: gql`
-          mutation UpdateRecruiter(
-            $updateRecruiterInput: UpdateRecruiterInput!
+          mutation UpdateSeeker(
+            $updateSeekerInput: UpdateSeekerInput!
           ) {
-            updateRecruiter(updateRecruiterInput: $updateRecruiterInput) {
+            updateSeeker(updateSeekerInput: $updateSeekerInput) {
               id
             }
           }
         `,
         variables: {
-          updateRecruiterInput: {
+          updateSeekerInput: {
             id: selectedItem.id,
             ...coreData,
             ...(password && {password})

@@ -8,6 +8,7 @@ import { HiringCompanyModule } from './modules/hiring-company/hiring-company.mod
 import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { AppResolver } from './app.resolver';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 
 @Module({
@@ -20,7 +21,8 @@ import { AppResolver } from './app.resolver';
     UserModule,
     HiringCompanyModule,
     JobModule,
-    AuthModule
+    AuthModule,
+    DashboardModule
   ],
   providers: [
     AppResolver

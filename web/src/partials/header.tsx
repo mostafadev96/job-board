@@ -20,6 +20,10 @@ interface HeaderProps {
 
 const HeaderComponent: React.FC<HeaderProps> = ({ noTitle = false }: HeaderProps) => {
   const { user, logout } = useAuth();
+  const systemLogout = () => {
+    logout();
+    window.location.href = '/login';
+  }
   const items = [];
   if(!user) {
     items.push({
@@ -73,7 +77,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({ noTitle = false }: HeaderProps
                 key: '2',
                 label: (
                   <Button type='link' onClick={() => {
-                    logout();
+                    systemLogout();
                     
                   }}>
                     Logout

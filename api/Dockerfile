@@ -2,10 +2,16 @@ FROM node:22-slim
 
 WORKDIR /app
 
-COPY . .
+COPY package*.json ./
+COPY nx.json ./
+COPY tsconfig.base.json ./
 
 RUN npm install
 
+COPY . .
+
 EXPOSE 3000
 
-CMD ["npm", "run", "api:start"]
+COPY start.sh ./
+RUN chmod +x start.sh
+CMD ["./start.sh"]

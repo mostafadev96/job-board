@@ -207,7 +207,7 @@ const HomePage: React.FC = () => {
         title="Apply for job"
         centered
         open={modal2Open && !!selectedItem}
-        okText="Update"
+        okText="Apply"
         cancelText="Cancel"
         onOk={applyForJob}
         onCancel={() => setModal2Open(false)}
@@ -233,7 +233,7 @@ const HomePage: React.FC = () => {
             <TextArea
               showCount
               maxLength={200}
-              placeholder="disable resize"
+              placeholder="short description"
               style={{ height: 120, resize: 'none' }}
             />
           </Form.Item>
@@ -251,7 +251,7 @@ const HomePage: React.FC = () => {
             <TextArea
               showCount
               maxLength={200}
-              placeholder="disable resize"
+              placeholder="Your education"
               style={{ height: 120, resize: 'none' }}
             />
           </Form.Item>
@@ -269,7 +269,7 @@ const HomePage: React.FC = () => {
             <TextArea
               showCount
               maxLength={200}
-              placeholder="disable resize"
+              placeholder="disable experiences"
               style={{ height: 120, resize: 'none' }}
             />
           </Form.Item>

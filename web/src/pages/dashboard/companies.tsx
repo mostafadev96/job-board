@@ -147,14 +147,13 @@ const CompanyPage: React.FC = () => {
       setLoading(true);
       const { data } = await client.mutate({
         mutation: gql`
-          mutation CreateHiringCompany($id: String!, $createHiringCompanyInput: CreateHiringCompanyInput!) {
-            createHiringCompany(id: $id, createHiringCompanyInput: $createHiringCompanyInput) {
+          mutation CreateHiringCompany($createHiringCompanyInput: CreateHiringCompanyInput!) {
+            createHiringCompany(createHiringCompanyInput: $createHiringCompanyInput) {
               id
             }
           }
         `,
         variables: {
-          id: selectedItem.id,
           createHiringCompanyInput: formData
         },
       });
@@ -168,7 +167,7 @@ const CompanyPage: React.FC = () => {
       openNotificationWithIcon(error.message);
     } finally {
       setLoading(false);
-      setModal2Open(false);
+      setModal1Open(false);
       setSelectedItem(null);
     }
   }
@@ -180,15 +179,20 @@ const CompanyPage: React.FC = () => {
       setLoading(true);
       const { data } = await client.mutate({
         mutation: gql`
-          mutation UpdateHiringCompany($id: String!, $updateHiringCompanyInput: UpdateHiringCompanyInput!) {
-            updateHiringCompany(id: $id, updateHiringCompanyInput: $updateHiringCompanyInput) {
+          mutation UpdateHiringCompany(
+            $updateHiringCompanyInput: UpdateHiringCompanyInput!
+          ) {
+            updateHiringCompany(updateHiringCompanyInput: $updateHiringCompanyInput) {
               id
             }
           }
         `,
         variables: {
           id: selectedItem.id,
-          updateHiringCompanyInput: formData
+          updateHiringCompanyInput: {
+            id: selectedItem.id,
+            ...formData
+          },
         },
       });
       console.log(data);
@@ -313,7 +317,7 @@ const CompanyPage: React.FC = () => {
             style={{
               backgroundColor: '#001529',
             }}
-            onClick={createResource}
+            onClick={() => setModal1Open(true)}
           >
             Add Company
           </Button>
@@ -330,7 +334,7 @@ const CompanyPage: React.FC = () => {
         open={modal1Open}
         okText="Add"
         cancelText="Cancel"
-        onOk={() => setModal1Open(false)}
+        onOk={createResource}
         onCancel={() => setModal1Open(false)}
       >
         <ResourceForm form={form} />

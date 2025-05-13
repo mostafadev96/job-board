@@ -72,6 +72,7 @@ export class AuthService {
     }
     const salt = bcrypt.genSaltSync();
     const newUser = await this.seekerService.create({
+      active: true,
       email,
       name,
       phone,

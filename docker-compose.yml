@@ -24,11 +24,11 @@ services:
       - app-network
 
   api:
-    cpus: 4
     container_name: job_board_backend
     build:
       context: .
       dockerfile: api/Dockerfile
+    command: ./start.sh
     ports:
       - '3000:3000'
     depends_on:

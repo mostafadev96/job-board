@@ -8,7 +8,7 @@ datasource db {
 }
 
 model admin {
-  id       String  @id(map: "PK_e032310bcef831fb83101899b10") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id       String  @id(map: "PK_e032310bcef831fb83101899b10") @default(uuid()) @db.Uuid
   email    String  @unique(map: "UQ_de87485f6489f5d0995f5841952") @db.VarChar
   password String  @db.VarChar
   name     String  @db.VarChar
@@ -16,7 +16,7 @@ model admin {
 }
 
 model application {
-  id                     String                            @id(map: "PK_569e0c3e863ebdf5f2408ee1670") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                     String                            @id(map: "PK_569e0c3e863ebdf5f2408ee1670") @default(uuid()) @db.Uuid
   created_at             DateTime                          @default(dbgenerated("('now'::text)::timestamp(6) with time zone")) @db.Timestamp(6)
   seekerId               String                            @db.Uuid
   jobId                  String                            @db.Uuid
@@ -36,7 +36,7 @@ model application {
 }
 
 model application_status {
-  id                String                         @id(map: "PK_7e957f206d5d171db7d25f57697") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                String                         @id(map: "PK_7e957f206d5d171db7d25f57697") @default(uuid()) @db.Uuid
   applicationId     String                         @db.Uuid
   recruiterId       String                         @db.Uuid
   recruiterName     String?                        @db.VarChar
@@ -49,7 +49,7 @@ model application_status {
 }
 
 model hiring_company {
-  id          String      @id(map: "PK_f71c2b2f0abd4ca2d59236051ea") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id          String      @id(map: "PK_f71c2b2f0abd4ca2d59236051ea") @default(uuid()) @db.Uuid
   title       String      @db.VarChar
   description String?
   country     String      @db.VarChar
@@ -60,7 +60,7 @@ model hiring_company {
 }
 
 model job {
-  id             String                @id(map: "PK_98ab1c14ff8d1cf80d18703b92f") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id             String                @id(map: "PK_98ab1c14ff8d1cf80d18703b92f") @default(uuid()) @db.Uuid
   title          String                @db.VarChar
   description    String
   country        String                @db.VarChar
@@ -76,7 +76,7 @@ model job {
 }
 
 model recruiter {
-  id                 String               @id(map: "PK_e10c71ef86a9be2a6aead8eadfa") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                 String               @id(map: "PK_e10c71ef86a9be2a6aead8eadfa") @default(uuid()) @db.Uuid
   email              String               @unique(map: "UQ_ec6610f232573009dfecae5bdf3") @db.VarChar
   password           String               @db.VarChar
   name               String               @db.VarChar
@@ -89,7 +89,7 @@ model recruiter {
 }
 
 model seeker {
-  id          String        @id(map: "PK_40c70b62e7b0087bdd3f383ed3b") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id          String        @id(map: "PK_40c70b62e7b0087bdd3f383ed3b") @default(uuid()) @db.Uuid
   email       String        @unique(map: "UQ_90fe9533a68edaa27a93520821f") @db.VarChar
   password    String        @db.VarChar
   name        String        @db.VarChar

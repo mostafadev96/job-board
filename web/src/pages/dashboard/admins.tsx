@@ -190,7 +190,7 @@ const AdminPage: React.FC = () => {
       openNotificationWithIcon(error.message);
     } finally {
       setLoading(false);
-      setModal2Open(false);
+      setModal1Open(false);
       setSelectedItem(null);
     }
   };

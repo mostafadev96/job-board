@@ -28,20 +28,20 @@ export const items: {
     link: '/dashboard/admins'
   },
   {
-    label: Resource.APPLICATION,
-    link: '/dashboard/applications'
-  },
-  {
     label: Resource.HIRING_COMPANY,
     link: '/dashboard/companies'
+  },
+  {
+    label: Resource.RECRUITER,
+    link: '/dashboard/recruiters'
   },
   {
     label: Resource.JOB,
     link: '/dashboard/jobs'
   },
   {
-    label: Resource.RECRUITER,
-    link: '/dashboard/recruiters'
+    label: Resource.APPLICATION,
+    link: '/dashboard/applications'
   },
   {
     label: Resource.SEEKER,
@@ -50,8 +50,12 @@ export const items: {
 ];
 
 export function canAccessResources(role: Role) {
+  const roleStr = role === Role.ADMIN ? 'admin' : role === Role.RECRUITER ? 'recruiter' : 'seeker';
   const newItems = items
-  .filter(resourceItem => RoleResources[role].includes(resourceItem.label));
+  .filter(resourceItem => {
+    const permissions = (RolePermissions[roleStr] as Record<Resource, Action[]>)[resourceItem.label];
+    return permissions ? permissions.includes(Action.VIEW) : false;
+  })
   return [
     {
       label: 'Dahboard' as Resource,

@@ -39,7 +39,7 @@ export const RolePermissions = {
       Action.VIEW,
     ],
     [Resource.SEEKER]: [Action.VIEW, Action.CREATE, Action.UPDATE, Action.DELETE],
-    [Resource.JOB]: [Action.CREATE, Action.UPDATE, Action.DELETE, Action.VIEW],
+    [Resource.JOB]: [Action.UPDATE, Action.DELETE, Action.VIEW],
     [Resource.APPLICATION]: [Action.VIEW],
     [Resource.APPLICATION_STATUS]: [
       Action.VIEW,
@@ -47,7 +47,6 @@ export const RolePermissions = {
   },
   [Role.RECRUITER]: {
     [Resource.RECRUITER]: [Action.CREATE, Action.UPDATE, Action.DELETE, Action.VIEW],
-    [Resource.SEEKER]: [Action.VIEW],
     [Resource.HIRING_COMPANY]: [Action.UPDATE, Action.VIEW],
     [Resource.JOB]: [Action.CREATE, Action.UPDATE, Action.DELETE, Action.VIEW],
     [Resource.APPLICATION]: [Action.VIEW, Action.UPDATE],

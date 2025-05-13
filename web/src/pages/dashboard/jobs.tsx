@@ -25,6 +25,7 @@ import TextArea from 'antd/es/input/TextArea';
 interface DataType {
   id: string;
   title: string;
+  description: string;
   country: string;
   active: string;
   contractType: string;
@@ -37,6 +38,7 @@ const LIST_QUERY = gql`
   query {
     jobs {
       title
+      description
       country
       contractType
       active
@@ -54,8 +56,8 @@ const LIST_QUERY = gql`
 
 const ResourceForm = ({ form, data, onSubmit }: { form: FormInstance; data?: any, onSubmit: (...args: any[]) => any }) => {
   const { Option } = Select;
-  form.setFieldValue('title', data?.email || '');
-  form.setFieldValue('desctiption', data?.name || '');
+  form.setFieldValue('title', data?.title || '');
+  form.setFieldValue('description', data?.description || '');
   form.setFieldValue('country', data?.country || '');
   form.setFieldValue('active', data?.active || '');
   form.setFieldValue('contractType', data?.contractType || '');
@@ -119,7 +121,7 @@ const ResourceForm = ({ form, data, onSubmit }: { form: FormInstance; data?: any
         <TextArea
           showCount
           maxLength={200}
-          placeholder="disable resize"
+          placeholder="disable description"
           style={{ height: 120, resize: 'none' }}
         />
       </Form.Item>
@@ -216,7 +218,7 @@ const JobPage: React.FC = () => {
       openNotificationWithIcon(error.message);
     } finally {
       setLoading(false);
-      setModal2Open(false);
+      setModal1Open(false);
       setSelectedItem(null);
     }
   };
