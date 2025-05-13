@@ -269,7 +269,7 @@ const HomePage: React.FC = () => {
             <TextArea
               showCount
               maxLength={200}
-              placeholder="disable experiences"
+              placeholder="your experiences"
               style={{ height: 120, resize: 'none' }}
             />
           </Form.Item>

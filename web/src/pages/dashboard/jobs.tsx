@@ -121,7 +121,7 @@ const ResourceForm = ({ form, data, onSubmit }: { form: FormInstance; data?: any
         <TextArea
           showCount
           maxLength={200}
-          placeholder="disable description"
+          placeholder="your description"
           style={{ height: 120, resize: 'none' }}
         />
       </Form.Item>
